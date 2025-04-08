@@ -28,9 +28,13 @@ export const addToCart = async (req: Request, res: Response) => {
       items: [{ product: productId, quantity, price, dimensions, variant }],
     });
   } else {
-    const itemIndex = cart.items.findIndex(
-      item => item.product.toString() === productId
-    );
+    const itemIndex = cart.items.findIndex(item => {
+      const isSameProduct = item.product.toString() === productId;
+      const isSameVariant = JSON.stringify(item.variant) === JSON.stringify(variant);
+      const isSameDimensions = JSON.stringify(item.dimensions) === JSON.stringify(dimensions);
+      return isSameProduct && isSameVariant && isSameDimensions;
+    });
+    
 
     if (itemIndex > -1) {
       cart.items[itemIndex].quantity += quantity;
@@ -108,3 +112,4 @@ export const updateCartItemQuantity = async (req: Request, res: Response) => {
   const populatedCart = await cart.populate('items.product');
   res.json({ cart: populatedCart });
 };
+

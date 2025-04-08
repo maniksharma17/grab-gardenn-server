@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { string } from 'zod';
 
 const orderItemSchema = new mongoose.Schema({
   product: {
@@ -51,6 +52,10 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  type: {
+    type: String,
+    enum: ['prepaid', 'cod']
+  },
   status: {
     type: String,
     enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
@@ -58,18 +63,19 @@ const orderSchema = new mongoose.Schema({
   },
   shippingAddress: {
     street: String,
+    streetOptional: String,
     city: String,
     state: String,
     zipCode: String,
     country: String,
+    name: String,
+    phone: String
   },
   paymentId: {
     type: String,
-    required: true,
   },
   paymentOrderId: {
     type: String,
-    required: true,
   },
   shiprocketOrderId: {
     type: String,
