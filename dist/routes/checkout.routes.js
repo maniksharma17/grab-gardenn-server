@@ -1,0 +1,13 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.checkoutRouter = void 0;
+const express_1 = require("express");
+const checkout_controller_1 = require("../controllers/checkout.controller");
+const auth_middleware_1 = require("../middleware/auth.middleware");
+exports.checkoutRouter = (0, express_1.Router)();
+exports.checkoutRouter.use(auth_middleware_1.auth);
+exports.checkoutRouter.post('/create-checkout-session/:id', checkout_controller_1.createCheckoutSession);
+exports.checkoutRouter.post('/verify-payment/:id', checkout_controller_1.verifyPayment);
+exports.checkoutRouter.post('/delivery-rate', checkout_controller_1.calculateDeliveryCharge);
+exports.checkoutRouter.post('/place-shiprocket-prepaid-order', checkout_controller_1.createShiprocketOrder);
+exports.checkoutRouter.post('/place-shiprocket-cod-order/:id', checkout_controller_1.createCodOrder);
