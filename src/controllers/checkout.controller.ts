@@ -60,7 +60,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
     }
 
     const options = {
-      amount: Math.round(amount), // *100
+      amount: Math.round(amount * 100), 
       currency: "INR",
       receipt: `order_${Date.now()}`,
     };
@@ -69,7 +69,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
 
     res.json({
       orderId: order.id,
-      amount: amount,
+      amount: order.amount,
       currency: order.currency,
       keyId: process.env.RAZORPAY_KEY_ID,
     });
