@@ -589,11 +589,11 @@ export const createDirectCodOrder = async (req: Request, res: Response) => {
 
     const orderItems = [];
 
-    let total = 0;
+    let total = price*quantity;
     if(price >= 1000){
-      total = price;
+      total = total;
     } else {
-      total = price + deliveryRate;
+      total = total + deliveryRate;
     }
 
     orderItems.push({
