@@ -53,7 +53,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
     const deliveryRate = req.body.deliveryRate;
 
     const options = {
-      amount: total+deliveryRate,
+      amount: Math.round((total+deliveryRate) * 100),
       currency: "INR",
       receipt: `order_${Date.now()}`,
     };
@@ -89,7 +89,7 @@ export const createDirectCheckoutSession = async (
     const deliveryRate = req.body.deliveryRate;
 
     const options = {
-      amount: Math.round((1) * 100),
+      amount: Math.round((total+deliveryRate) * 100),
       currency: "INR",
       receipt: `order_${Date.now()}`,
     };
