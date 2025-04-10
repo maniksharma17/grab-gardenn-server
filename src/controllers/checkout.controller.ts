@@ -52,8 +52,15 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
     }
     const deliveryRate = req.body.deliveryRate;
 
+    let amount = 0;
+    if(total >= 1000) {
+      amount = total;
+    } else {
+      amount = total + deliveryRate
+    }
+
     const options = {
-      amount: Math.round((total+deliveryRate) * 100),
+      amount: Math.round((amount) * 100),
       currency: "INR",
       receipt: `order_${Date.now()}`,
     };
@@ -88,8 +95,15 @@ export const createDirectCheckoutSession = async (
     let total = req.body.price;
     const deliveryRate = req.body.deliveryRate;
 
+    let amount = 0;
+    if(total >= 1000) {
+      amount = total;
+    } else {
+      amount = total + deliveryRate
+    }
+
     const options = {
-      amount: Math.round((total+deliveryRate) * 100),
+      amount: Math.round((amount) * 100),
       currency: "INR",
       receipt: `order_${Date.now()}`,
     };
