@@ -60,7 +60,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
     }
 
     const options = {
-      amount: Math.round((amount)), // *100
+      amount: (amount), // *100
       currency: "INR",
       receipt: `order_${Date.now()}`,
     };
