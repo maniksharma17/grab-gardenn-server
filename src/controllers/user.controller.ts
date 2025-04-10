@@ -30,7 +30,8 @@ export const register = async (req: Request, res: Response) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: true,
-      sameSite: 'none',
+      sameSite: 'lax',
+      domain: 'grabgardenn.com'
     });
 
     res.status(201).json({ user: { ...user.toObject(), password: undefined }, token });
@@ -61,7 +62,8 @@ export const login = async (req: Request, res: Response) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: true,
-      sameSite: 'none',
+       sameSite: 'lax',
+      domain: 'grabgardenn.com'
     });
 
     res.json({ user: { ...user.toObject(), password: undefined }, token });
@@ -74,7 +76,8 @@ export const logout = (req: Request, res: Response) => {
   res.cookie('token', '', {
     httpOnly: true,
     expires: new Date(0),
-    sameSite: 'none',
+     sameSite: 'lax',
+      domain: 'grabgardenn.com'
   });
   res.json({ message: 'Logged out successfully' });
 };
