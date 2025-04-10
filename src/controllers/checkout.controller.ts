@@ -167,7 +167,12 @@ export const verifyPayment = async (req: Request, res: Response) => {
       return;
     }
 
-    let total = price;
+    let total = 0;
+    if(price >= 1000) {
+      total = price
+    } else {
+      total = price + deliveryRate
+    }
     const orderItems = [];
 
     for (const item of cart.items) {
@@ -202,7 +207,7 @@ export const verifyPayment = async (req: Request, res: Response) => {
     const order = await Order.create({
       user: req.params.id,
       items: orderItems,
-      total: total + deliveryRate,
+      total: total,
       shippingAddress: req.body.shippingAddress,
       paymentId: razorpay_payment_id,
       paymentOrderId: razorpay_order_id,
@@ -262,7 +267,14 @@ export const verifyDirectPayment = async (req: Request, res: Response) => {
       return;
     }
 
-    let total = price + deliveryRate;
+
+    let total = 0;
+    if(price >= 1000) {
+      total = price
+    } else {
+      total = price + deliveryRate
+    }
+
     const orderItems = [
       {
         product: product,
@@ -533,10 +545,16 @@ export const createCodOrder = async (req: Request, res: Response) => {
       });
     }
 
+    if(total >= 1000){
+      total = total + 0;
+    } else {
+      total = total + deliveryRate;
+    }
+
     const order = await Order.create({
       user: userId,
       items: orderItems,
-      total: total + deliveryRate,
+      total: total,
       shippingAddress,
       type: "cod",
     });
@@ -567,8 +585,13 @@ export const createDirectCodOrder = async (req: Request, res: Response) => {
       dimensions
     } = req.body;
 
-    let total = price*quantity;
     const orderItems = [];
+    let total = 0;
+    if(price >= 1000){
+      total = price;
+    } else {
+      total = price + deliveryRate;
+    }
 
     orderItems.push({
     product: product,
@@ -582,7 +605,7 @@ export const createDirectCodOrder = async (req: Request, res: Response) => {
     const order = await Order.create({
       user: userId,
       items: orderItems,
-      total: total + deliveryRate,
+      total: total,
       shippingAddress,
       type: "cod",
     });
