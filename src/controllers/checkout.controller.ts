@@ -560,7 +560,7 @@ export const createCodOrder = async (req: Request, res: Response) => {
       freeShipping: total >= 1000,
       type: "cod",
     });
-    console.log(order)
+
     // Clear cart
     await Cart.findByIdAndDelete(cart._id);
 
@@ -588,6 +588,7 @@ export const createDirectCodOrder = async (req: Request, res: Response) => {
     } = req.body;
 
     const orderItems = [];
+
     let total = 0;
     if(price >= 1000){
       total = price;
@@ -604,13 +605,16 @@ export const createDirectCodOrder = async (req: Request, res: Response) => {
   });
     
 
-    const order = await Order.create({
-      user: userId,
-      items: orderItems,
-      total: total,
-      shippingAddress,
-      type: "cod",
-    });
+  const order = await Order.create({
+    user: userId,
+    items: orderItems,
+    total,
+    shippingAddress,
+    type: "cod",
+    deliveryRate,
+    freeShipping: total >= 1000
+  });
+  console.log(order)
 
     req.body.orderId = order._id;
     req.body.paymentMethod = "COD";
