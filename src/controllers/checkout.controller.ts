@@ -53,7 +53,43 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
     const deliveryRate = req.body.deliveryRate;
 
     const options = {
-      amount: Math.round((total+deliveryRate) * 100),
+      amount: total+deliveryRate,
+      currency: "INR",
+      receipt: `order_${Date.now()}`,
+    };
+
+    const order = await razorpay.orders.create(options);
+
+    res.json({
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      keyId: process.env.RAZORPAY_KEY_ID,
+    });
+  } catch (error) {
+    console.error("Razorpay order creation error:", error);
+    res.status(500).json({ message: "Error creating checkout session" });
+  }
+};
+
+export const createDirectCheckoutSession = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    if (!razorpay) {
+      razorpay = initializeRazorpay();
+      if (!razorpay) {
+        res.status(500).json({ message: "Payment service not configured" });
+        return;
+      }
+    }
+
+    let total = req.body.price;
+    const deliveryRate = req.body.deliveryRate;
+
+    const options = {
+      amount: Math.round((1) * 100),
       currency: "INR",
       receipt: `order_${Date.now()}`,
     };
@@ -82,8 +118,13 @@ export const verifyPayment = async (req: Request, res: Response) => {
       }
     }
 
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, deliveryRate } =
-      req.body;
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      deliveryRate,
+      price
+    } = req.body;
 
     const key_secret = process.env.RAZORPAY_KEY_SECRET;
     if (!key_secret) {
@@ -112,7 +153,7 @@ export const verifyPayment = async (req: Request, res: Response) => {
       return;
     }
 
-    let total = 0;
+    let total = price;
     const orderItems = [];
 
     for (const item of cart.items) {
@@ -147,15 +188,86 @@ export const verifyPayment = async (req: Request, res: Response) => {
     const order = await Order.create({
       user: req.params.id,
       items: orderItems,
-      total: total+deliveryRate,
+      total: total + deliveryRate,
       shippingAddress: req.body.shippingAddress,
       paymentId: razorpay_payment_id,
       paymentOrderId: razorpay_order_id,
-      type: 'prepaid'
+      type: "prepaid",
     });
 
     // Clear the cart
     await Cart.findByIdAndDelete(cart._id);
+
+    res.json({
+      success: true,
+      order,
+    });
+  } catch (error) {
+    console.error("Payment verification error:", error);
+    res.status(500).json({ message: "Error verifying payment" });
+  }
+};
+
+export const verifyDirectPayment = async (req: Request, res: Response) => {
+  try {
+    if (!razorpay) {
+      razorpay = initializeRazorpay();
+      if (!razorpay) {
+        res.status(500).json({ message: "Payment service not configured" });
+        return;
+      }
+    }
+
+    const {
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      deliveryRate,
+      shippingAddress,
+      price,
+      product,
+      quantity,
+      variant,
+      dimensions
+    } = req.body;
+
+    const key_secret = process.env.RAZORPAY_KEY_SECRET;
+    if (!key_secret) {
+      res.status(500).json({ message: "Payment service not configured" });
+      return;
+    }
+
+    const sign = razorpay_order_id + "|" + razorpay_payment_id;
+    const expectedSign = crypto
+      .createHmac("sha256", key_secret)
+      .update(sign)
+      .digest("hex");
+
+    if (razorpay_signature !== expectedSign) {
+      res.status(400).json({ message: "Invalid payment signature" });
+      return;
+    }
+
+    let total = price + deliveryRate;
+    const orderItems = [
+      {
+        product: product,
+        quantity: quantity,
+        price: price,
+        variant: variant,
+        dimensions: dimensions,
+      },
+    ];
+
+    const order = await Order.create({
+      user: req.params.id,
+      items: orderItems,
+      total: total,
+      shippingAddress: shippingAddress,
+      paymentId: razorpay_payment_id,
+      paymentOrderId: razorpay_order_id,
+      type: "prepaid",
+    });
 
     res.json({
       success: true,
@@ -188,7 +300,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
     const { orderId, paymentMethod } = req.body;
     const order = await Order.findById(orderId)
       .populate("items.product")
-      .populate("user")
+      .populate("user");
     const user = order?.user as any;
 
     if (!order) {
@@ -203,12 +315,15 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
 
     order.items.forEach((item) => {
       totalWeight += (item.variant?.value as any) * item.quantity;
-
-      maxLength = Math.max(maxLength, item.dimensions?.length as number);
-      totalBreadth += (item.dimensions?.breadth as number) * item.quantity;
-      totalHeight += item.dimensions?.height as number;
+    
+      const lengthCm = (item.dimensions?.length ?? 0) * 2.54;
+      const breadthCm = (item.dimensions?.breadth ?? 0) * 2.54;
+      const heightCm = (item.dimensions?.height ?? 0) * 2.54;
+    
+      maxLength = Math.max(maxLength, lengthCm);
+      totalBreadth += breadthCm * item.quantity;
+      totalHeight += heightCm * item.quantity;
     });
-
 
     const shiprocketOrder = {
       order_id: order._id.toString(),
@@ -228,9 +343,9 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
       shipping_is_billing: true,
       payment_method: paymentMethod,
       sub_total: order.total,
-      length: (maxLength || 10),
-      breadth: (totalBreadth || 10),
-      height: (totalHeight || 10),
+      length: maxLength || 10,
+      breadth: totalBreadth || 10,
+      height: totalHeight || 10,
       weight: totalWeight,
       order_items: order.items.map((item) => ({
         name: (item.product as any).name.toString(),
@@ -238,7 +353,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
         units: item.quantity,
         selling_price: item.price,
       })),
-    }
+    };
 
     const response = await axios.post(
       `${SHIPROCKET_API_BASE}/orders/create/adhoc`,
@@ -258,7 +373,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
     const awbFetchCall = await axios.post(
       `${SHIPROCKET_API_BASE}/courier/assign/awb`,
       {
-        shipment_id: response.data.shipment_id
+        shipment_id: response.data.shipment_id,
       },
       {
         headers: {
@@ -271,19 +386,20 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
 
     try {
       const pickupRequestCall = await axios.post(
-      `${SHIPROCKET_API_BASE}/courier/generate/pickup`,{
-        shipment_id: response.data.shipment_id
-      },
-      {
-        headers: {
-          Authorization: "Bearer " + token,
-          "Content-Type": "application/json",
+        `${SHIPROCKET_API_BASE}/courier/generate/pickup`,
+        {
+          shipment_id: response.data.shipment_id,
         },
-      }
-    )
-    console.log("PICKUP REQUEST GENERATED:", pickupRequestCall.data);
-  } catch(error) {
-      console.log(error)
+        {
+          headers: {
+            Authorization: "Bearer " + token,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("PICKUP REQUEST GENERATED:", pickupRequestCall.data);
+    } catch (error) {
+      console.log(error);
     }
 
     res.json({ success: true, shiprocketOrderId: response.data.order_id });
@@ -292,7 +408,6 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Error creating Shiprocket order" });
   }
 };
-
 
 export const calculateDeliveryCharge = async (req: Request, res: Response) => {
   try {
@@ -325,10 +440,10 @@ export const calculateDeliveryCharge = async (req: Request, res: Response) => {
     const params = new URLSearchParams({
       pickup_postcode: "247667",
       delivery_postcode: destinationPincode,
-      weight: (totalWeight).toString(),
-      length: (maxLength).toString(),
-      breadth: (totalBreadth).toString(),
-      height: (totalHeight).toString(),
+      weight: totalWeight.toString(),
+      length: maxLength.toString(),
+      breadth: totalBreadth.toString(),
+      height: totalHeight.toString(),
       cod: "0",
     }).toString();
 
@@ -380,11 +495,15 @@ export const createCodOrder = async (req: Request, res: Response) => {
     for (const item of cart.items) {
       const product = await Product.findById(item.product);
       if (!product) {
-        return res.status(400).json({ message: `Product ${item.product} not found` });
+        return res
+          .status(400)
+          .json({ message: `Product ${item.product} not found` });
       }
 
       if (product.stock < item.quantity) {
-        return res.status(400).json({ message: `Insufficient stock for ${product.name}` });
+        return res
+          .status(400)
+          .json({ message: `Insufficient stock for ${product.name}` });
       }
 
       product.stock -= item.quantity;
@@ -415,10 +534,97 @@ export const createCodOrder = async (req: Request, res: Response) => {
     req.body.orderId = order._id;
     req.body.paymentMethod = "COD";
     await createShiprocketOrder(req, res);
-
   } catch (error) {
     console.error("COD Order creation error:", error);
     res.status(500).json({ message: "Error creating COD order" });
   }
 };
 
+export const createDirectCodOrder = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.id;
+    const {
+      deliveryRate,
+      shippingAddress,
+      price,
+      product,
+      quantity,
+      variant,
+      dimensions
+    } = req.body;
+
+    let total = price*quantity;
+    const orderItems = [];
+
+    orderItems.push({
+    product: product,
+    quantity: quantity,
+    price: price,
+    variant: variant,
+    dimensions: dimensions,
+  });
+    
+
+    const order = await Order.create({
+      user: userId,
+      items: orderItems,
+      total: total + deliveryRate,
+      shippingAddress,
+      type: "cod",
+    });
+
+    req.body.orderId = order._id;
+    req.body.paymentMethod = "COD";
+    await createShiprocketOrder(req, res);
+  } catch (error) {
+    console.error("COD Order creation error:", error);
+    res.status(500).json({ message: "Error creating COD order" });
+  }
+};
+
+export const calculateDeliveryChargeWithoutCart = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { destinationPincode, weight } = req.body;
+
+    const token = await getShiprocketToken();
+
+    const params = new URLSearchParams({
+      pickup_postcode: "247667",
+      delivery_postcode: destinationPincode,
+      weight: weight.toString(),
+      cod: "0",
+    }).toString();
+
+    const response = await axios.get(
+      `${SHIPROCKET_API_BASE}/courier/serviceability/?${params}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    const shippingOptions = response.data.data.available_courier_companies;
+
+    if (!shippingOptions || shippingOptions.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "No courier options available for this pincode." });
+    }
+
+    // You can return all options or pick the cheapest
+    const cheapest = shippingOptions.reduce((a: any, b: any) =>
+      a.rate < b.rate ? a : b
+    );
+
+    res.json({
+      estimatedDeliveryDays: cheapest.etd,
+      deliveryCharge: cheapest.rate,
+      courierName: cheapest.courier_name,
+    });
+  } catch (error) {
+    console.error("Error calculating delivery charge:", error);
+    res.status(500).json({ message: "Failed to calculate delivery charge" });
+  }
+};
