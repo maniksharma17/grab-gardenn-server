@@ -1,16 +1,37 @@
 import { Request, Response } from 'express';
 import { Cart } from '../models/cart.model';
-import { Product } from '../models/product.model';
+import { Product, ProductDocument } from '../models/product.model';
 import mongoose from 'mongoose';
 
 export const getCart = async (req: Request, res: Response) => {
+  updateCartPrices(req.params.id)
   const cart = await Cart.findOne({ user: req.params.id })
     .populate('items.product');
   res.json({ cart });
 };
 
+const updateCartPrices = async (userId: string) => {
+  const cart = await Cart.findOne({ user: userId }).populate("items.product");
+
+  if (!cart) return;
+
+  cart.items.forEach(item => {
+    const product = item.product as unknown as ProductDocument;
+
+    const matchedIndex = product.variants.findIndex(
+      (v) => JSON.stringify(v) === JSON.stringify(item.variant)
+    );
+
+    const priceIndex = matchedIndex >= 0 ? matchedIndex : 0;
+
+    item.price = product.price[priceIndex] || product.price[0];
+  });
+
+  await cart.save();
+};
+
 export const addToCart = async (req: Request, res: Response) => {
-  const { productId, quantity, dimensions, variant, price } = req.body;
+  const { productId, quantity, dimensions, variant, priceIndex } = req.body;
 
   const product = await Product.findById(productId);
   if (!product) {
@@ -25,7 +46,7 @@ export const addToCart = async (req: Request, res: Response) => {
   if (!cart) {
     cart = await Cart.create({
       user: req.params.id,
-      items: [{ product: productId, quantity, price, dimensions, variant }],
+      items: [{ product: productId, quantity, price: product.price[priceIndex], dimensions, variant }],
     });
   } else {
     const itemIndex = cart.items.findIndex(item => {
@@ -39,7 +60,7 @@ export const addToCart = async (req: Request, res: Response) => {
     if (itemIndex > -1) {
       cart.items[itemIndex].quantity += quantity;
     } else {
-      cart.items.push({ product: productId, quantity, price, dimensions, variant });
+      cart.items.push({ product: productId, quantity, price: product.price[priceIndex], dimensions, variant });
     }
     await cart.save();
   }

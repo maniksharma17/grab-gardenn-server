@@ -1,4 +1,27 @@
 import mongoose from 'mongoose';
+import { Document, Types } from 'mongoose';
+import { ProductDocument } from './product.model';
+
+export interface CartItem {
+  product: ProductDocument;
+  quantity: number;
+  price: number;
+  variant: {
+    display: string;
+    value: number;
+  };
+  dimensions: {
+    length: number;
+    breadth: number;
+    height: number;
+  };
+}
+
+export interface CartDocument extends Document {
+  user: Types.ObjectId; // Or UserDocument if populated
+  items: CartItem[];
+  updatedAt: Date;
+}
 
 const cartItemSchema = new mongoose.Schema({
   product: {

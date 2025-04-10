@@ -1,5 +1,34 @@
 import mongoose from 'mongoose';
 
+import { Document, Types } from 'mongoose';
+
+export interface ProductVariant {
+  display: string;
+  value: number;
+}
+
+export interface ProductDocument extends Document {
+  name: string;
+  hindiName: string;
+  description: string;
+  price: number[];
+  cutoffPrice: number[];
+  variants: ProductVariant[];
+  images: string[];
+  category: Types.ObjectId;
+  benefits: string;
+  ingredients: string;
+  storage: string;
+  rating: number;
+  instructions: string;
+  stock: number;
+  dimensions: {
+    length: number;
+    breadth: number;
+    height: number;
+  };
+}
+
 const productSchema = new mongoose.Schema({
   name: {
     type: String,
