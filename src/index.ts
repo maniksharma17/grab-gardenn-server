@@ -29,6 +29,7 @@ app.use('/api/users', userRouter);
 app.use('/api/products', productRouter);
 app.use('/api/cart', cartRouter);
 app.use('/api/orders', orderRouter);
+app.use('/api/checkout', checkoutRouter);
 app.use('/api/categories', categoryRouter);
 
 // Error handling middleware
