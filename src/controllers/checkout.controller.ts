@@ -137,7 +137,6 @@ export const verifyPayment = async (req: Request, res: Response) => {
       razorpay_payment_id,
       razorpay_signature,
       deliveryRate,
-      price
     } = req.body;
 
     const key_secret = process.env.RAZORPAY_KEY_SECRET;
@@ -168,11 +167,6 @@ export const verifyPayment = async (req: Request, res: Response) => {
     }
 
     let total = 0;
-    if(price >= 1000) {
-      total = price
-    } else {
-      total = price + deliveryRate
-    }
     const orderItems = [];
 
     for (const item of cart.items) {
@@ -202,6 +196,12 @@ export const verifyPayment = async (req: Request, res: Response) => {
         variant: item.variant,
         dimensions: item.dimensions,
       });
+    }
+
+    if(total >= 1000) {
+      total = total + 0;
+    } else {
+      total = total + deliveryRate
     }
 
     const order = await Order.create({
