@@ -558,7 +558,7 @@ export const createCodOrder = async (req: Request, res: Response) => {
       shippingAddress,
       type: "cod",
     });
-
+    console.log(order)
     // Clear cart
     await Cart.findByIdAndDelete(cart._id);
 

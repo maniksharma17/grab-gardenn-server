@@ -112,7 +112,7 @@ export const addAddress = async (req: Request, res: Response) => {
 
     res.status(200).json({ message: "Address added successfully", newAddress });
   } catch (error) {
-    res.status(500).json({ message: "Server error", error });
+    res.status(500).json({ message: "Server error", error })
   }
 };
 
