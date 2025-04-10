@@ -6,6 +6,7 @@ import { Order } from "../models/order.model";
 import { Product } from "../models/product.model";
 import axios from "axios";
 import dotenv from "dotenv";
+import { User } from "../models/user.model";
 dotenv.config();
 
 let razorpay: Razorpay | null = null;
@@ -561,6 +562,10 @@ export const createCodOrder = async (req: Request, res: Response) => {
       type: "cod",
     });
 
+    const user = await User.findById(userId);
+    user?.orders.push(order._id)
+    await user?.save()
+
     // Clear cart
     await Cart.findByIdAndDelete(cart._id);
 
@@ -614,7 +619,9 @@ export const createDirectCodOrder = async (req: Request, res: Response) => {
     deliveryRate,
     freeShipping: total >= 1000
   });
-  console.log(order)
+  const user = await User.findById(userId);
+  user?.orders.push(order._id)
+  await user?.save()
 
     req.body.orderId = order._id;
     req.body.paymentMethod = "COD";
