@@ -556,6 +556,8 @@ export const createCodOrder = async (req: Request, res: Response) => {
       items: orderItems,
       total: total,
       shippingAddress,
+      deliveryRate,
+      freeShipping: total >= 1000,
       type: "cod",
     });
     console.log(order)

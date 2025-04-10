@@ -80,6 +80,12 @@ const orderSchema = new mongoose.Schema({
   shiprocketOrderId: {
     type: String,
   },
+  deliveryRate: {
+    type: Number
+  },
+  freeShipping: {
+    type: Boolean
+  },
   createdAt: {
     type: Date,
     default: Date.now,
