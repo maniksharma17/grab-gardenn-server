@@ -619,6 +619,7 @@ export const createDirectCodOrder = async (req: Request, res: Response) => {
     deliveryRate,
     freeShipping: total >= 1000
   });
+  
   const user = await User.findById(userId);
   user?.orders.push(order._id)
   await user?.save()
@@ -676,5 +677,79 @@ export const calculateDeliveryChargeWithoutCart = async (
   } catch (error) {
     console.error("Error calculating delivery charge:", error);
     res.status(500).json({ message: "Failed to calculate delivery charge" });
+  }
+};
+
+export const cancelShiprocketOrder = async (req: Request, res: Response) => {
+  try {
+    const { shiprocketOrderId } = req.body;
+
+    if (!shiprocketOrderId) {
+      return res.status(400).json({ message: "Shiprocket Order ID is required" });
+    }
+
+    const token = await getShiprocketToken();
+
+    const response = await axios.post(
+      `${SHIPROCKET_API_BASE}/orders/cancel`,
+      {
+        ids: [shiprocketOrderId],
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.data.status === 200) {
+      return res.status(200).json({
+        message: "Shiprocket order cancelled successfully",
+        data: response.data,
+      });
+    } else {
+      return res.status(500).json({
+        message: "Failed to cancel Shiprocket order",
+        data: response.data,
+      });
+    }
+  } catch (error: any) {
+    console.error("Error cancelling Shiprocket order:", error.message);
+    return res.status(500).json({ message: "Error cancelling Shiprocket order" });
+  }
+};
+
+export const getExistingAWB = async (req: Request, res: Response) => {
+  try {
+    const { order_id } = req.params;
+
+    if (!order_id) {
+      return res.status(400).json({ message: "Shiprocket order_id is required" });
+    }
+
+    const token = await getShiprocketToken();
+
+    const response = await axios.get(
+      `${SHIPROCKET_API_BASE}/orders/show/${order_id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const { awb_code } = response.data;
+
+    if (!awb_code) {
+      return res.status(404).json({ message: "AWB not generated yet" });
+    }
+
+    res.json({ success: true, awb_code });
+  } catch (error: any) {
+    console.error("Error fetching AWB:", error?.response?.data || error.message);
+    res.status(500).json({
+      message: "Failed to fetch AWB ID",
+      error: error?.response?.data || error.message,
+    });
   }
 };

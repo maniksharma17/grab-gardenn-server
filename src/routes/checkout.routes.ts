@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { calculateDeliveryCharge, calculateDeliveryChargeWithoutCart, createCheckoutSession, createCodOrder, createDirectCheckoutSession, createDirectCodOrder, createShiprocketOrder, verifyDirectPayment, verifyPayment } from '../controllers/checkout.controller';
+import { calculateDeliveryCharge, calculateDeliveryChargeWithoutCart, cancelShiprocketOrder, createCheckoutSession, createCodOrder, createDirectCheckoutSession, createDirectCodOrder, createShiprocketOrder, getExistingAWB, verifyDirectPayment, verifyPayment } from '../controllers/checkout.controller';
 import { auth } from '../middleware/auth.middleware';
 
 export const checkoutRouter = Router();
@@ -13,3 +13,6 @@ checkoutRouter.post('/direct-delivery-rate', calculateDeliveryChargeWithoutCart)
 checkoutRouter.post('/place-shiprocket-prepaid-order', auth, createShiprocketOrder)
 checkoutRouter.post('/place-shiprocket-cod-order/:id', auth, createCodOrder)
 checkoutRouter.post('/place-direct-shiprocket-cod-order/:id', auth, createDirectCodOrder)
+checkoutRouter.post('/cancel-order/:id', auth, cancelShiprocketOrder);
+checkoutRouter.get("/get-awb_id/:order_id", getExistingAWB);
+

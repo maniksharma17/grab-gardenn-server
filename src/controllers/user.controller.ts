@@ -132,3 +132,34 @@ export const deleteAddress = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
+
+export const updateAddress = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.userId;
+    const addressId = req.params.addressId;
+    const { street, streetOptional, city, state, zipCode, country } = req.body;
+
+    if (!street || !city || !state || !zipCode || !country) {
+      return res.status(400).json({ message: "Missing required address fields" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const address = user.address.id(addressId);
+    if (!address) return res.status(404).json({ message: "Address not found" });
+
+    address.street = street;
+    address.streetOptional = streetOptional;
+    address.city = city;
+    address.state = state;
+    address.zipCode = zipCode;
+    address.country = country;
+
+    await user.save();
+
+    res.status(200).json({ message: "Address updated successfully", address });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error });
+  }
+};
