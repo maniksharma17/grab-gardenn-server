@@ -10,7 +10,7 @@ export const getCart = async (req: Request, res: Response) => {
   res.json({ cart });
 };
 
-import { isEqual } from "lodash"; // make sure lodash is installed
+import { isEqual } from "lodash";
 
 const updateCartPrices = async (userId: string) => {
   try {
@@ -24,7 +24,7 @@ const updateCartPrices = async (userId: string) => {
       if (!product || !product.price?.length || !product.variants?.length) continue;
 
       const matchedIndex = product.variants.findIndex(
-        (v) => isEqual(v, item.variant)
+        (v) => isEqual(v.value, item.variant?.value)
       );
 
       const priceIndex = matchedIndex >= 0 ? matchedIndex : 0;
