@@ -592,6 +592,17 @@ export const createDirectCodOrder = async (req: Request, res: Response) => {
       dimensions
     } = req.body;
 
+    const productOrdered = await Product.findById(product);
+    if(!productOrdered){
+      res.status(404).json({message: "Product not found."})
+      return;
+    }
+
+    if(productOrdered.stock < quantity){
+      res.json({message: "Insufficient stock."})
+      return;
+    }
+
     const orderItems = [];
 
     let total = price*quantity;
