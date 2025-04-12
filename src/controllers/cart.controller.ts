@@ -10,25 +10,34 @@ export const getCart = async (req: Request, res: Response) => {
   res.json({ cart });
 };
 
+import { isEqual } from "lodash"; // make sure lodash is installed
+
 const updateCartPrices = async (userId: string) => {
-  const cart = await Cart.findOne({ user: userId }).populate("items.product");
+  try {
+    const cart = await Cart.findOne({ user: userId }).populate("items.product");
 
-  if (!cart) return;
+    if (!cart) return;
 
-  cart.items.forEach(item => {
-    const product = item.product as unknown as ProductDocument;
+    for (const item of cart.items) {
+      const product = item.product as unknown as  ProductDocument;
 
-    const matchedIndex = product.variants.findIndex(
-      (v) => JSON.stringify(v) === JSON.stringify(item.variant)
-    );
+      if (!product || !product.price?.length || !product.variants?.length) continue;
 
-    const priceIndex = matchedIndex >= 0 ? matchedIndex : 0;
+      const matchedIndex = product.variants.findIndex(
+        (v) => isEqual(v, item.variant)
+      );
 
-    item.price = product.price[priceIndex] || product.price[0];
-  });
+      const priceIndex = matchedIndex >= 0 ? matchedIndex : 0;
 
-  await cart.save();
+      item.price = product.price[priceIndex] ?? product.price[0];
+    }
+
+    await cart.save();
+  } catch (error) {
+    console.error("Failed to update cart prices:", error);
+  }
 };
+
 
 export const addToCart = async (req: Request, res: Response) => {
   const { productId, quantity, dimensions, variant, priceIndex } = req.body;
