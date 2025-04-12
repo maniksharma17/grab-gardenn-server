@@ -112,7 +112,7 @@ export const addAddress = async (req: Request, res: Response) => {
     user.address.push(newAddress);
     await user.save();
 
-    res.status(200).json({ message: "Address added successfully", newAddress });
+    res.status(200).json({ message: "Address added successfully", addresses: user.address });
   } catch (error) {
     res.status(500).json({ message: "Server error", error })
   }
@@ -129,7 +129,7 @@ export const deleteAddress = async (req: Request, res: Response) => {
     user.address.pull({_id: addressId});
     await user.save();
 
-    res.status(200).json({ message: "Address deleted successfully", address: user.address });
+    res.status(200).json({ message: "Address deleted successfully", addresses: user.address });
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
@@ -162,7 +162,7 @@ export const updateAddress = async (req: Request, res: Response) => {
 
     await user.save();
 
-    res.status(200).json({ message: "Address updated successfully", address });
+    res.status(200).json({ message: "Address updated successfully", addresses: user.address });
   } catch (error) {
     res.status(500).json({ message: "Server error", error });
   }
