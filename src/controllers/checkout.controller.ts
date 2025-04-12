@@ -599,7 +599,7 @@ export const createDirectCodOrder = async (req: Request, res: Response) => {
     }
 
     if(productOrdered.stock < quantity){
-      res.json({message: "Insufficient stock."})
+      res.status(400).json({message: "Insufficient stock."})
       return;
     }
 
