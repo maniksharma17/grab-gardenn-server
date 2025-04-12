@@ -89,7 +89,7 @@ export const getProfile = async (req: Request, res: Response) => {
 
 export const addAddress = async (req: Request, res: Response) => {
   try{
-    const { street, streetOptional, city, state, zipCode, country } = req.body;
+    const { name, phone, street, streetOptional, city, state, zipCode, country } = req.body;
 
     if (!street || !city || !state || !zipCode || !country) {
       return res.status(400).json({ message: "Missing required address fields" });
@@ -105,6 +105,8 @@ export const addAddress = async (req: Request, res: Response) => {
       state,
       zipCode,
       country,
+      name,
+      phone
     };
 
     user.address.push(newAddress);
@@ -137,7 +139,7 @@ export const updateAddress = async (req: Request, res: Response) => {
   try {
     const userId = req.params.userId;
     const addressId = req.params.addressId;
-    const { street, streetOptional, city, state, zipCode, country } = req.body;
+    const { street, streetOptional, city, state, zipCode, country, name, phone } = req.body;
 
     if (!street || !city || !state || !zipCode || !country) {
       return res.status(400).json({ message: "Missing required address fields" });
@@ -155,6 +157,8 @@ export const updateAddress = async (req: Request, res: Response) => {
     address.state = state;
     address.zipCode = zipCode;
     address.country = country;
+    address.name = name;
+    address.phone = phone;
 
     await user.save();
 
