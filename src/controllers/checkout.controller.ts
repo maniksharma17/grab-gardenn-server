@@ -705,25 +705,15 @@ export const calculateDeliveryChargeWithoutCart = async (
       }
     );
 
-    const shippingOptions = response.data.data.available_courier_companies;
-
-    if (!shippingOptions || shippingOptions.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "No courier options available for this pincode." });
-    }
-
-    // You can return all options or pick the cheapest
-    const cheapest = shippingOptions.reduce((a: any, b: any) =>
-      a.rate < b.rate ? a : b
-    );
-    console.log(cheapest.courier_name)
+    const shippingOption = response.data.data.recommended_courier_company_id;
+    const courierOptions = response.data.data.available_courier_companies;
+    console.log(courierOptions[0])
 
     res.json({
-      estimatedDeliveryDays: shippingOptions[0].etd,
-      deliveryCharge: shippingOptions[0].rate + shippingOptions[0].freight_charge,
-      courierName: shippingOptions[0].courier_name,
-      courierId: shippingOptions[0].courier_company_id
+      estimatedDeliveryDays: courierOptions[0].etd,
+      deliveryCharge: courierOptions[0].rate,
+      courierName: courierOptions[0].courier_name,
+      courierId: shippingOption
     });
   } catch (error) {
     console.error("Error calculating delivery charge:", error);
