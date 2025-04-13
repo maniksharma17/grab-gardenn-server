@@ -397,10 +397,45 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
     order.shiprocketOrderId = response.data.order_id;
     await order.save();
 
+    // ASSIGN COURIER
+
+    const params = new URLSearchParams({
+      pickup_postcode: "247667",
+      delivery_postcode: order.shippingAddress?.zipCode as string,
+      weight: totalWeight.toString(),
+      length: maxLength.toString(),
+      breadth: totalBreadth.toString(),
+      height: totalHeight.toString(),
+      cod: "0",
+    }).toString();
+
+    const courierResponse = await axios.get(
+      `${SHIPROCKET_API_BASE}/courier/serviceability/?${params}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    const shippingOptions = courierResponse.data.data.available_courier_companies;
+
+    if (!shippingOptions || shippingOptions.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "No courier options available for this pincode." });
+    }
+
+    // You can return all options or pick the cheapest
+    const cheapest = shippingOptions.reduce((a: any, b: any) =>
+      a.rate < b.rate ? a : b
+    );
+    console.log("CHEAPEST COURIER: " + cheapest)
+
+
     const awbFetchCall = await axios.post(
       `${SHIPROCKET_API_BASE}/courier/assign/awb`,
       {
         shipment_id: response.data.shipment_id,
+        courier_id: cheapest.courier_company_id
       },
       {
         headers: {
