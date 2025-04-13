@@ -688,6 +688,7 @@ export const calculateDeliveryChargeWithoutCart = async (
       pickup_postcode: "247667",
       delivery_postcode: destinationPincode,
       weight: weight.toString(),
+      cod: "0"
     }).toString();
 
     const response = await axios.get(
