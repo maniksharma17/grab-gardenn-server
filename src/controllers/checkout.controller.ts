@@ -402,7 +402,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
     const params = new URLSearchParams({
       pickup_postcode: "247667",
       delivery_postcode: order.shippingAddress?.zipCode as string,
-      order_id: response.data.shiprocketOrderId,
+      order_id: response.data.order_id,
       cod: paymentMethod == 'COD' ? "0":"1"
     }).toString();
 
