@@ -412,6 +412,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
         headers: { Authorization: `Bearer ${token}` },
       }
     );
+    console.log("COURIER LIST: " + courierResponse.data)
 
     const shippingOptions = courierResponse.data.data.available_courier_companies;
 
@@ -425,7 +426,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
     const cheapest = shippingOptions.reduce((a: any, b: any) =>
       a.rate < b.rate ? a : b
     );
-    console.log("COURIER LIST: " + courierResponse.data)
+    
     console.log("CHEAPEST COURIER: " + cheapest.courier_company_id)
 
 
