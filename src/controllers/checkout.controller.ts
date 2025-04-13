@@ -753,7 +753,7 @@ export const getExistingAWB = async (req: Request, res: Response) => {
       }
     );
 
-    const { awb_code } = response.data;
+    const { awb } = response.data.data.awb_data;
 
     if (!awb_code) {
       return res.status(404).json({ message: "AWB not generated yet" });
