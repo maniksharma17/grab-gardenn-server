@@ -412,7 +412,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
         headers: { Authorization: `Bearer ${token}` },
       }
     );
-    console.log("COURIER LIST: " + courierResponse.data)
+    console.log("COURIER LIST: " + courierResponse.data.data)
 
     const shippingOptions = courierResponse.data.data.available_courier_companies;
 
