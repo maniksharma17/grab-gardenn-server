@@ -695,7 +695,7 @@ export const calculateDeliveryChargeWithoutCart = async (
       pickup_postcode: "247667",
       delivery_postcode: destinationPincode,
       weight: weight.toString(),
-      cod: "1"
+      cod: cod
     }).toString();
 
     const response = await axios.get(
@@ -705,15 +705,24 @@ export const calculateDeliveryChargeWithoutCart = async (
       }
     );
 
-    const shippingOption = response.data.data.recommended_courier_company_id;
-    const courierOptions = response.data.data.available_courier_companies;
-    console.log(courierOptions[0])
+    const shippingOptions = response.data.data.available_courier_companies;
+
+    if (!shippingOptions || shippingOptions.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "No courier options available for this pincode." });
+    }
+
+    // You can return all options or pick the cheapest
+    const cheapest = shippingOptions.reduce((a: any, b: any) =>
+      a.rate < b.rate ? a : b
+    );
 
     res.json({
-      estimatedDeliveryDays: courierOptions[0].etd,
-      deliveryCharge: courierOptions[0].rate,
-      courierName: courierOptions[0].courier_name,
-      courierId: shippingOption
+      estimatedDeliveryDays: cheapest.etd,
+      deliveryCharge:cheapest.rate,
+      courierName: cheapest.courier_name,
+      courierId: cheapest.courier_company_id
     });
   } catch (error) {
     console.error("Error calculating delivery charge:", error);
