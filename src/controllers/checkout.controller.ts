@@ -324,7 +324,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
   try {
     const token = await getShiprocketToken();
 
-    const { orderId, paymentMethod } = req.body;
+    const { orderId, paymentMethod, courierId } = req.body;
     const order = await Order.findById(orderId)
       .populate("items.product")
       .populate("user");
@@ -431,7 +431,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
       `${SHIPROCKET_API_BASE}/courier/assign/awb`,
       {
         shipment_id: response.data.shipment_id,
-        courier_id: cheapest.courier_company_id
+        courier_id: courierId
       },
       {
         headers: {
@@ -529,6 +529,7 @@ export const calculateDeliveryCharge = async (req: Request, res: Response) => {
       estimatedDeliveryDays: cheapest.etd,
       deliveryCharge: cheapest.rate,
       courierName: cheapest.courier_name,
+      courierId: cheapest.courier_company_id
     });
   } catch (error) {
     console.error("Error calculating delivery charge:", error);
@@ -539,7 +540,7 @@ export const calculateDeliveryCharge = async (req: Request, res: Response) => {
 export const createCodOrder = async (req: Request, res: Response) => {
   try {
     const userId = req.params.id;
-    const { shippingAddress, deliveryRate } = req.body;
+    const { shippingAddress, deliveryRate, courierId } = req.body;
 
     const cart = await Cart.findOne({ user: userId }).populate("items.product");
 
@@ -603,6 +604,7 @@ export const createCodOrder = async (req: Request, res: Response) => {
     // Now call the Shiprocket order creation using internal function
     req.body.orderId = order._id;
     req.body.paymentMethod = "COD";
+    req.body.courierId = courierId;
     await createShiprocketOrder(req, res);
   } catch (error) {
     console.error("COD Order creation error:", error);
@@ -615,6 +617,7 @@ export const createDirectCodOrder = async (req: Request, res: Response) => {
     const userId = req.params.id;
     const {
       deliveryRate,
+      courierId,
       shippingAddress,
       price,
       product,
@@ -668,6 +671,7 @@ export const createDirectCodOrder = async (req: Request, res: Response) => {
 
     req.body.orderId = order._id;
     req.body.paymentMethod = "COD";
+    req.body.courierId = courierId;
     await createShiprocketOrder(req, res);
   } catch (error) {
     console.error("COD Order creation error:", error);
