@@ -720,6 +720,7 @@ export const calculateDeliveryChargeWithoutCart = async (
       estimatedDeliveryDays: cheapest.etd,
       deliveryCharge: cheapest.rate,
       courierName: cheapest.courier_name,
+      courierId: cheapest.courier_company_id
     });
   } catch (error) {
     console.error("Error calculating delivery charge:", error);
