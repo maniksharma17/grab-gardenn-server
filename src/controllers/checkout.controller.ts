@@ -425,6 +425,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
     const cheapest = shippingOptions.reduce((a: any, b: any) =>
       a.rate < b.rate ? a : b
     );
+    console.log("COURIER LIST: " + courierResponse.data)
     console.log("CHEAPEST COURIER: " + cheapest.courier_company_id)
 
 
