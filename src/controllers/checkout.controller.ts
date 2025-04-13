@@ -720,10 +720,10 @@ export const calculateDeliveryChargeWithoutCart = async (
     console.log(cheapest.courier_name)
 
     res.json({
-      estimatedDeliveryDays: cheapest.etd,
-      deliveryCharge:cheapest.rate + cheapest.freight_charge,
-      courierName: cheapest.courier_name,
-      courierId: cheapest.courier_company_id
+      estimatedDeliveryDays: shippingOptions[0].etd,
+      deliveryCharge: shippingOptions[0].rate + shippingOptions[0].freight_charge,
+      courierName: shippingOptions[0].courier_name,
+      courierId: shippingOptions[0].courier_company_id
     });
   } catch (error) {
     console.error("Error calculating delivery charge:", error);
