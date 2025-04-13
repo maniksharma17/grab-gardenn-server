@@ -693,7 +693,7 @@ export const calculateDeliveryChargeWithoutCart = async (
 
 export const cancelShiprocketOrder = async (req: Request, res: Response) => {
   try {
-    const { shiprocketOrderId } = req.body;
+    const { shiprocketOrderId, reason } = req.body;
 
     if (!shiprocketOrderId) {
       return res.status(400).json({ message: "Shiprocket Order ID is required" });
@@ -715,7 +715,8 @@ export const cancelShiprocketOrder = async (req: Request, res: Response) => {
 
     if (response.data.status_code === 200) {
       await Order.updateOne({shiprocketOrderId}, {
-        status: 'cancelled'
+        status: 'cancelled',
+        cancellationReason: reason
       })
       return res.status(200).json({
         message: "Shiprocket order cancelled successfully",
