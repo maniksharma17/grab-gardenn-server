@@ -434,7 +434,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
       `${SHIPROCKET_API_BASE}/courier/assign/awb`,
       {
         shipment_id: response.data.shipment_id,
-        courier_id: courierId
+        courier_id: cheapest.courier_company_id
       },
       {
         headers: {
@@ -530,7 +530,7 @@ export const calculateDeliveryCharge = async (req: Request, res: Response) => {
 
     res.json({
       estimatedDeliveryDays: cheapest.etd,
-      deliveryCharge: cheapest.rate,
+      deliveryCharge: cheapest.rate + cheapest.freight_charge,
       courierName: cheapest.courier_name,
       courierId: cheapest.courier_company_id
     });
@@ -721,7 +721,7 @@ export const calculateDeliveryChargeWithoutCart = async (
 
     res.json({
       estimatedDeliveryDays: cheapest.etd,
-      deliveryCharge: cheapest.rate,
+      deliveryCharge:cheapest.rate + cheapest.freight_charge,
       courierName: cheapest.courier_name,
       courierId: cheapest.courier_company_id
     });
