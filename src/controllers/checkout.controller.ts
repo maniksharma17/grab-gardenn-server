@@ -402,11 +402,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
     const params = new URLSearchParams({
       pickup_postcode: "247667",
       delivery_postcode: order.shippingAddress?.zipCode as string,
-      weight: totalWeight.toString(),
-      length: maxLength.toString(),
-      breadth: totalBreadth.toString(),
-      height: totalHeight.toString(),
-      cod: "0",
+      order_id: response.data.shiprocketOrderId
     }).toString();
 
     const courierResponse = await axios.get(
@@ -428,7 +424,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
     const cheapest = shippingOptions.reduce((a: any, b: any) =>
       a.rate < b.rate ? a : b
     );
-    console.log("CHEAPEST COURIER: " + cheapest)
+    console.log("CHEAPEST COURIER: " + cheapest.courier_company_id)
 
 
     const awbFetchCall = await axios.post(
