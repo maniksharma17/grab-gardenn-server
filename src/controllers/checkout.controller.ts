@@ -688,7 +688,6 @@ export const calculateDeliveryChargeWithoutCart = async (
       pickup_postcode: "247667",
       delivery_postcode: destinationPincode,
       weight: weight.toString(),
-      cod: "0",
     }).toString();
 
     const response = await axios.get(
@@ -710,6 +709,7 @@ export const calculateDeliveryChargeWithoutCart = async (
     const cheapest = shippingOptions.reduce((a: any, b: any) =>
       a.rate < b.rate ? a : b
     );
+    console.log(cheapest.courier_name)
 
     res.json({
       estimatedDeliveryDays: cheapest.etd,
