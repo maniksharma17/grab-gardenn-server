@@ -755,11 +755,11 @@ export const getExistingAWB = async (req: Request, res: Response) => {
 
     const { awb } = response.data.data.awb_data;
 
-    if (!awb_code) {
+    if (!awb) {
       return res.status(404).json({ message: "AWB not generated yet" });
     }
 
-    res.json({ success: true, awb_code });
+    res.json({ success: true, awb_code: awb });
   } catch (error: any) {
     console.error("Error fetching AWB:", error?.response?.data || error.message);
     res.status(500).json({
