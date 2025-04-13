@@ -687,7 +687,7 @@ export const calculateDeliveryChargeWithoutCart = async (
   res: Response
 ) => {
   try {
-    const { destinationPincode, weight } = req.body;
+    const { destinationPincode, weight, cod } = req.body;
 
     const token = await getShiprocketToken();
 
@@ -695,7 +695,7 @@ export const calculateDeliveryChargeWithoutCart = async (
       pickup_postcode: "247667",
       delivery_postcode: destinationPincode,
       weight: weight.toString(),
-      cod: "0"
+      cod: "1"
     }).toString();
 
     const response = await axios.get(
