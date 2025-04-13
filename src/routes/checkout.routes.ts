@@ -13,6 +13,6 @@ checkoutRouter.post('/direct-delivery-rate', calculateDeliveryChargeWithoutCart)
 checkoutRouter.post('/place-shiprocket-prepaid-order', auth, createShiprocketOrder)
 checkoutRouter.post('/place-shiprocket-cod-order/:id', auth, createCodOrder)
 checkoutRouter.post('/place-direct-shiprocket-cod-order/:id', auth, createDirectCodOrder)
-checkoutRouter.post('/cancel-order/:id', auth, cancelShiprocketOrder);
+checkoutRouter.post('/cancel-order/:shiprocketOrderId', auth, cancelShiprocketOrder);
 checkoutRouter.get("/get-awb_id/:order_id", getExistingAWB);
 

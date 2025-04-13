@@ -714,6 +714,9 @@ export const cancelShiprocketOrder = async (req: Request, res: Response) => {
     );
 
     if (response.data.status === 200) {
+      await Order.updateOne({shiprocketOrderId}, {
+        status: 'cancelled'
+      })
       return res.status(200).json({
         message: "Shiprocket order cancelled successfully",
         data: response.data,
