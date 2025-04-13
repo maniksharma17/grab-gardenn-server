@@ -167,3 +167,66 @@ export const updateAddress = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Server error", error });
   }
 };
+
+import crypto from 'crypto';
+import nodemailer from 'nodemailer';
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  const user = await User.findOne({ email });
+  if (!user) return res.status(404).json({ message: "Email not registered" });
+
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+  user.resetPasswordToken = resetTokenHash;
+  user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000); 
+
+  await user.save();
+
+  const resetURL = `https://grabgardenn.com/reset-password/${resetToken}`;
+
+  // send mail using nodemailer (free SMTP config)
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.SMTP_EMAIL, // your Gmail
+      pass: process.env.SMTP_PASS   // app password
+    }
+  });
+
+  await transporter.sendMail({
+    from: `"Grab Gardenn" <${process.env.SMTP_EMAIL}>`,
+    to: user.email,
+    subject: 'Password Reset Request',
+    html: `<p>Click the link to reset your password:</p><a href="${resetURL}">${resetURL}</a><p>This link is valid for 15 minutes.</p>`
+  });
+
+  res.status(200).json({ message: "Reset email sent successfully" });
+};
+
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const { token } = req.params;
+  const { password } = req.body;
+
+  const resetTokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+  const user = await User.findOne({
+    resetPasswordToken: resetTokenHash,
+    resetPasswordExpires: { $gt: Date.now() }
+  });
+
+  if (!user) return res.status(400).json({ message: "Invalid or expired token" });
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  user.password = hashedPassword;
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpires = undefined;
+
+  await user.save();
+
+  res.status(200).json({ message: "Password reset successfully" });
+};
+
