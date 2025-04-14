@@ -440,7 +440,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
 
 export const calculateDeliveryCharge = async (req: Request, res: Response) => {
   try {
-    const { userId, destinationPincode } = req.body;
+    const { userId, destinationPincode, cod } = req.body;
 
     const cart = await Cart.findOne({ user: userId }).populate("items.product");
 
@@ -470,10 +470,7 @@ export const calculateDeliveryCharge = async (req: Request, res: Response) => {
       pickup_postcode: "247667",
       delivery_postcode: destinationPincode,
       weight: totalWeight.toString(),
-      length: maxLength.toString(),
-      breadth: totalBreadth.toString(),
-      height: totalHeight.toString(),
-      cod: "0",
+      cod: cod,
     }).toString();
 
     const response = await axios.get(
