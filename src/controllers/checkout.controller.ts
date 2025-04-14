@@ -550,22 +550,17 @@ export const createCodOrder = async (req: Request, res: Response) => {
       });
     }
 
+    let finalTotal = total;
     if(total >= 1000){
-      total = total + 0;
+      finalTotal = total + 0 - promoCodeDiscount;
     } else {
-      total = total + deliveryRate;
-    }
-
-    let postDiscountTotal = 0;
-    const promo = await PromoCode.findOne({code: promoCode});
-    if(promo){
-      postDiscountTotal  = total - promoCodeDiscount;
+      finalTotal = total + deliveryRate - promoCodeDiscount;
     }
 
     const order = await Order.create({
       user: userId,
       items: orderItems,
-      total: promo ? postDiscountTotal : total,
+      total: finalTotal,
       shippingAddress,
       deliveryRate,
       freeShipping: total >= 1000,
