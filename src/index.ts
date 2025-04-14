@@ -44,24 +44,6 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ecommerce
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
     });
-    const promoCode = new PromoCode({
-      code: 'LAUNCH30',
-      type: 'percent',
-      value: 30,
-      active: true,
-      maxUses: 100,
-      usedCount: 0,
-      oneTimeUsePerUser: true,
-      expiryDate: new Date('2025-10-11T00:00:00Z')
-    });
-    
-    promoCode.save()
-      .then(() => {
-        console.log('Promo code LAUNCH30 created successfully');
-      })
-      .catch((error) => {
-        console.error('Error creating promo code:', error);
-      });
   })
   .catch((error) => {
     console.error('MongoDB connection error:', error);
