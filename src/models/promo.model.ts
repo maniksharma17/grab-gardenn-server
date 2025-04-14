@@ -10,6 +10,7 @@ const promoCodeSchema = new mongoose.Schema({
   minimumOrder: { type: Number, default: 0 },
   maxUses: { type: Number },
   usedCount: { type: Number, default: 0 }, 
+  oneTimeUsePerUser: { type: Boolean }
 });
 
 

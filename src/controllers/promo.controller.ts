@@ -20,14 +20,18 @@ export const applyPromoCode = async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Promo code usage limit reached' });
   }
 
-  const alreadyUsed = await Order.findOne({
-    user: userId,
-    promoCode: promo._id
-  });
 
-  if (alreadyUsed) {
-    return res.status(400).json({ error: 'You have already used this promo code' });
+  if(promo.oneTimeUsePerUser){
+    const alreadyUsed = await Order.findOne({
+      user: userId,
+      promoCode: promo._id
+    });
+  
+    if (alreadyUsed) {
+      return res.status(400).json({ error: 'You have already used this promo code' });
+    }
   }
+  
 
   const discountAmount = promo.type === 'percent'
     ? Math.floor(total * (promo.value / 100))
