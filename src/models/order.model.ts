@@ -88,8 +88,7 @@ const orderSchema = new mongoose.Schema({
     type: Boolean
   },
   promoCode: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "PromoCode"
+    type: String
   },
   createdAt: {
     type: Date,

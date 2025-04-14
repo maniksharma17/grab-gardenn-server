@@ -7,6 +7,7 @@ import { Product } from "../models/product.model";
 import axios from "axios";
 import dotenv from "dotenv";
 import { User } from "../models/user.model";
+import { PromoCode } from "../models/promo.model";
 dotenv.config();
 
 let razorpay: Razorpay | null = null;
@@ -511,7 +512,7 @@ export const calculateDeliveryCharge = async (req: Request, res: Response) => {
 export const createCodOrder = async (req: Request, res: Response) => {
   try {
     const userId = req.params.id;
-    const { shippingAddress, deliveryRate, courierId } = req.body;
+    const { shippingAddress, deliveryRate, courierId, promoCode } = req.body;
 
     const cart = await Cart.findOne({ user: userId }).populate("items.product");
 
@@ -563,7 +564,15 @@ export const createCodOrder = async (req: Request, res: Response) => {
       deliveryRate,
       freeShipping: total >= 1000,
       type: "cod",
+      promoCode: promoCode
     });
+
+    if (promoCode) {
+      await PromoCode.updateOne(
+        { code: promoCode },
+        { $inc: { usedCount: 1 } }
+      );
+    }
 
     const user = await User.findById(userId);
     user?.orders.push(order._id)
