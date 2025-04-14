@@ -337,7 +337,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
 
     let totalWeight = 0;
     let maxLength = 0;
-    let totalBreadth = 0;
+    let maxBreadth = 0;
     let totalHeight = 0;
 
     order.items.forEach((item) => {
@@ -348,7 +348,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
       const heightCm = (item.dimensions?.height ?? 0) * 2.54;
     
       maxLength = Math.max(maxLength, lengthCm);
-      totalBreadth += breadthCm * item.quantity;
+      maxBreadth = Math.max(maxBreadth, breadthCm);
       totalHeight += heightCm * item.quantity;
     });
 
@@ -371,7 +371,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
       payment_method: paymentMethod,
       sub_total: order.total,
       length: maxLength || 10,
-      breadth: totalBreadth || 10,
+      breadth: maxBreadth || 10,
       height: totalHeight || 10,
       weight: totalWeight,
       order_items: order.items.map((item) => ({
@@ -460,7 +460,7 @@ export const calculateDeliveryCharge = async (req: Request, res: Response) => {
       totalWeight += (item.variant?.value ?? 0) * item.quantity;
 
       maxLength = Math.max(maxLength, item.dimensions?.length ?? 0);
-      maxBreadth += Math.max(maxBreadth, item.dimensions?.breadth ?? 0);
+      maxBreadth = Math.max(maxBreadth, item.dimensions?.breadth ?? 0);
       totalHeight += item.dimensions?.height ?? 0 * item.quantity;
     }
 
