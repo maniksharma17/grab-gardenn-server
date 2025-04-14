@@ -31,6 +31,7 @@ app.use('/api/cart', cartRouter);
 app.use('/api/orders', orderRouter);
 app.use('/api/checkout', checkoutRouter);
 app.use('/api/categories', categoryRouter);
+app.use('/api/promo-code', categoryRouter);
 
 // Error handling middleware
 app.use(errorHandler);
