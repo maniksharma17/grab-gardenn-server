@@ -512,7 +512,7 @@ export const calculateDeliveryCharge = async (req: Request, res: Response) => {
 export const createCodOrder = async (req: Request, res: Response) => {
   try {
     const userId = req.params.id;
-    const { shippingAddress, deliveryRate, courierId, promoCode, promoDiscount } = req.body;
+    const { shippingAddress, deliveryRate, courierId, promoCode, promoCodeDiscount } = req.body;
 
     const cart = await Cart.findOne({ user: userId }).populate("items.product");
 
@@ -559,7 +559,7 @@ export const createCodOrder = async (req: Request, res: Response) => {
     let postDiscountTotal = 0;
     const promo = await PromoCode.findOne({code: promoCode});
     if(promo){
-      postDiscountTotal  = total - promoDiscount;
+      postDiscountTotal  = total - promoCodeDiscount;
     }
 
     const order = await Order.create({
