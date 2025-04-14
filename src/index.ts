@@ -11,6 +11,7 @@ import { checkoutRouter } from './routes/checkout.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { categoryRouter } from './routes/category.routes';
 import { PromoCode } from './models/promo.model';
+import { promoRouter } from './routes/promo.routes';
 
 dotenv.config();
 
@@ -32,7 +33,7 @@ app.use('/api/cart', cartRouter);
 app.use('/api/orders', orderRouter);
 app.use('/api/checkout', checkoutRouter);
 app.use('/api/categories', categoryRouter);
-app.use('/api/promo-code', categoryRouter);
+app.use('/api/promo-code', promoRouter);
 
 // Error handling middleware
 app.use(errorHandler);
