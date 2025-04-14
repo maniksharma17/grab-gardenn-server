@@ -46,8 +46,10 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ecommerce
     });
     const promoCode = new PromoCode({
       code: 'LAUNCH30',
-      discountPercentage: 30,
-      maxUsage: 100,
+      type: 'percent',
+      value: 30,
+      active: true,
+      maxUses: 100,
       usedCount: 0,
       oneTimeUsePerUser: true,
       expiryDate: new Date('2025-10-11T00:00:00Z')
