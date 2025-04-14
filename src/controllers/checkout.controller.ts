@@ -495,7 +495,7 @@ export const calculateDeliveryCharge = async (req: Request, res: Response) => {
 
     res.json({
       estimatedDeliveryDays: cheapest.etd,
-      deliveryCharge: cheapest.rate + cheapest.freight_charge,
+      deliveryCharge: cheapest.rate,
       courierName: cheapest.courier_name,
       courierId: cheapest.courier_company_id
     });
