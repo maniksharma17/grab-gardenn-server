@@ -12,8 +12,10 @@ export const applyPromoCode = async (req: Request, res: Response) => {
   const promo = await PromoCode.findOne({ code: code.toUpperCase(), active: true });
 
   if (!promo) return res.status(400).json({ error: 'Invalid or inactive promo code' });
-  if (promo.expiryDate < new Date()) return res.status(400).json({ error: 'Promo code expired' });
-  if (promo.minimumOrder && total < promo.minimumOrder) {
+  if (promo.expiryDate < new Date()) {
+    await PromoCode.updateOne({ _id: promo._id }, { active: false });  
+    return res.status(400).json({ error: 'Promo code expired' });
+  }  if (promo.minimumOrder && total < promo.minimumOrder) {
     return res.status(400).json({ error: `Minimum order ₹${promo.minimumOrder} required` });
   }
   if (promo.maxUses && promo.usedCount >= promo.maxUses) {
