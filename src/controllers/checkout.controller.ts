@@ -379,6 +379,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
         units: item.quantity,
         selling_price: item.price,
       })),
+      shipping_charges: order.freeShipping ? 0 : order.deliveryRate
     };
 
     const response = await axios.post(
