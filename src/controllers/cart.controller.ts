@@ -40,6 +40,8 @@ const updateCartPrices = async (userId: string) => {
 
 
 export const addToCart = async (req: Request, res: Response) => {
+  updateCartPrices(req.params.id)
+  
   const { productId, quantity, dimensions, variant, priceIndex } = req.body;
 
   const product = await Product.findById(productId);
