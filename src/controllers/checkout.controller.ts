@@ -361,7 +361,6 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
       billing_address: order.shippingAddress?.street || "",
       billing_address_2: order.shippingAddress?.streetOptional || "",
       billing_city: order.shippingAddress?.city || "",
-      company_name: "GRAB GARDENN HEALTHY FOODS",
       billing_pincode: order.shippingAddress?.zipCode || "",
       billing_state: order.shippingAddress?.state || "",
       billing_country: order.shippingAddress?.country || "",
