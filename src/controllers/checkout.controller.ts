@@ -341,7 +341,10 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
     let maxBreadth = 0;
     let totalHeight = 0;
 
+    let total = 0;
+
     order.items.forEach((item) => {
+      total += item.price * item.quantity;
       totalWeight += (item.variant?.value as any) * item.quantity;
     
       const lengthCm = (item.dimensions?.length ?? 0) * 2.54;
@@ -369,7 +372,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
       billing_phone: order.shippingAddress?.phone || "",
       shipping_is_billing: true,
       payment_method: paymentMethod,
-      sub_total: order.freeShipping ? order.total : order.total - (order.deliveryRate||0),
+      sub_total: total,
       length: maxLength || 10,
       breadth: maxBreadth || 10,
       height: totalHeight || 10,
@@ -380,7 +383,8 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
         units: item.quantity,
         selling_price: item.price,
       })),
-      shipping_charges: order.freeShipping ? 0 : order.deliveryRate
+      shipping_charges: order.deliveryRate,
+      total_discount: order.promoCodeDiscount
     };
 
     const response = await axios.post(
@@ -562,10 +566,11 @@ export const createCodOrder = async (req: Request, res: Response) => {
       items: orderItems,
       total: finalTotal,
       shippingAddress,
-      deliveryRate,
+      deliveryRate: total>=1000 ? 0 : deliveryRate,
       freeShipping: total >= 1000,
       type: "cod",
-      promoCode: promoCode
+      promoCode,
+      promoCodeDiscount
     });
 
     if (promoCode) {

@@ -90,6 +90,9 @@ const orderSchema = new mongoose.Schema({
   promoCode: {
     type: String
   },
+  promoCodeDiscount: {
+    type: Number
+  },
   createdAt: {
     type: Date,
     default: Date.now,
