@@ -368,7 +368,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
       billing_phone: order.shippingAddress?.phone || "",
       shipping_is_billing: true,
       payment_method: paymentMethod,
-      sub_total: order.total,
+      sub_total: order.freeShipping ? order.total : order.total - (order.deliveryRate||0),
       length: maxLength || 10,
       breadth: maxBreadth || 10,
       height: totalHeight || 10,
