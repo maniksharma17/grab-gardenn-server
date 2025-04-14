@@ -40,7 +40,6 @@ const updateCartPrices = async (userId: string) => {
 
 
 export const addToCart = async (req: Request, res: Response) => {
-  updateCartPrices(req.params.id)
   
   const { productId, quantity, dimensions, variant, priceIndex } = req.body;
 
@@ -62,9 +61,8 @@ export const addToCart = async (req: Request, res: Response) => {
   } else {
     const itemIndex = cart.items.findIndex(item => {
       const isSameProduct = item.product.toString() === productId;
-      const isSameVariant = JSON.stringify(item.variant) === JSON.stringify(variant);
-      const isSameDimensions = JSON.stringify(item.dimensions) === JSON.stringify(dimensions);
-      return isSameProduct && isSameVariant && isSameDimensions;
+      const isSameVariant = (item.variant?.value) === (variant.value);
+      return isSameProduct && isSameVariant;
     });
     
 
