@@ -87,6 +87,10 @@ const orderSchema = new mongoose.Schema({
   freeShipping: {
     type: Boolean
   },
+  promoCode: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "PromoCode"
+  },
   createdAt: {
     type: Date,
     default: Date.now,
