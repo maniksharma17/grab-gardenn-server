@@ -451,7 +451,7 @@ export const calculateDeliveryCharge = async (req: Request, res: Response) => {
     // Calculate weight and dimensions
     let totalWeight = 0;
     let maxLength = 0;
-    let totalBreadth = 0;
+    let maxBreadth = 0;
     let totalHeight = 0;
 
     for (const item of cart.items) {
@@ -460,7 +460,7 @@ export const calculateDeliveryCharge = async (req: Request, res: Response) => {
       totalWeight += (item.variant?.value ?? 0) * item.quantity;
 
       maxLength = Math.max(maxLength, item.dimensions?.length ?? 0);
-      totalBreadth += item.dimensions?.breadth ?? 0 * item.quantity;
+      maxBreadth += Math.max(maxBreadth, item.dimensions?.breadth ?? 0);
       totalHeight += item.dimensions?.height ?? 0 * item.quantity;
     }
 
@@ -470,6 +470,9 @@ export const calculateDeliveryCharge = async (req: Request, res: Response) => {
       pickup_postcode: "247667",
       delivery_postcode: destinationPincode,
       weight: totalWeight.toString(),
+      length: maxLength.toString(),
+      breadth: maxBreadth.toString(),
+      height: totalHeight.toString(),
       cod: cod,
     }).toString();
 
