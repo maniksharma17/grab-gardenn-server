@@ -613,7 +613,9 @@ export const createDirectCodOrder = async (req: Request, res: Response) => {
       product,
       quantity,
       variant,
-      dimensions
+      dimensions,
+      promoCode,
+      promoCodeDiscount
     } = req.body;
 
     const productOrdered = await Product.findById(product);
@@ -630,10 +632,12 @@ export const createDirectCodOrder = async (req: Request, res: Response) => {
     const orderItems = [];
 
     let total = price*quantity;
+
+    let finalTotal = total;
     if(total >= 1000){
-      total = total;
+      finalTotal = total + 0 - promoCodeDiscount;
     } else {
-      total = total + deliveryRate;
+      finalTotal = total + deliveryRate - promoCodeDiscount;
     }
 
     orderItems.push({
@@ -648,11 +652,13 @@ export const createDirectCodOrder = async (req: Request, res: Response) => {
   const order = await Order.create({
     user: userId,
     items: orderItems,
-    total,
+    total: finalTotal,
     shippingAddress,
     type: "cod",
     deliveryRate: total>=1000 ? 0 : deliveryRate,
     freeShipping: total >= 1000,
+    promoCode,
+    promoCodeDiscount
   });
   
   const user = await User.findById(userId);
