@@ -402,21 +402,25 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
     order.shiprocketOrderId = response.data.order_id;
     await order.save();
 
-    
-    const awbFetchCall = await axios.post(
-      `${SHIPROCKET_API_BASE}/courier/assign/awb`,
-      {
-        shipment_id: response.data.shipment_id,
-        courier_id: courierId
-      },
-      {
-        headers: {
-          Authorization: "Bearer " + token,
-          "Content-Type": "application/json",
+    try{
+      const awbFetchCall = await axios.post(
+        `${SHIPROCKET_API_BASE}/courier/assign/awb`,
+        {
+          shipment_id: response.data.shipment_id,
+          courier_id: courierId
         },
-      }
-    );
-    console.log("AWB GENERATED:", awbFetchCall.data);
+        {
+          headers: {
+            Authorization: "Bearer " + token,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("AWB GENERATED:", awbFetchCall.data);
+
+    } catch (err) {
+      res.json({ success: true, shiprocketOrderId: response.data.order_id });
+    }
 
     try {
       const pickupRequestCall = await axios.post(
