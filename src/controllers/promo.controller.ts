@@ -26,7 +26,7 @@ export const applyPromoCode = async (req: Request, res: Response) => {
   if(promo.oneTimeUsePerUser){
     const alreadyUsed = await Order.findOne({
       user: userId,
-      promoCode: promo._id
+      promoCode: promo.code
     });
   
     if (alreadyUsed) {

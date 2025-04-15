@@ -652,7 +652,7 @@ export const createDirectCodOrder = async (req: Request, res: Response) => {
     shippingAddress,
     type: "cod",
     deliveryRate: total>=1000 ? 0 : deliveryRate,
-    freeShipping: total >= 1000
+    freeShipping: total >= 1000,
   });
   
   const user = await User.findById(userId);
