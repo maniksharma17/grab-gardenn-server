@@ -630,7 +630,7 @@ export const createDirectCodOrder = async (req: Request, res: Response) => {
     const orderItems = [];
 
     let total = price*quantity;
-    if(price >= 1000){
+    if(total >= 1000){
       total = total;
     } else {
       total = total + deliveryRate;
@@ -651,7 +651,7 @@ export const createDirectCodOrder = async (req: Request, res: Response) => {
     total,
     shippingAddress,
     type: "cod",
-    deliveryRate,
+    deliveryRate: total>=1000 ? 0 : deliveryRate,
     freeShipping: total >= 1000
   });
   
