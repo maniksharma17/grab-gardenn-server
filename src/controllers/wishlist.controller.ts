@@ -36,8 +36,8 @@ export const addToWishlist = async (req: Request, res: Response) => {
         return res.status(400).json({ error: true, message: 'Item already in wishlist' });
       }
       
-      const id = new mongoose.Types.ObjectId(`${productId.toString()}`);
-      wishlist.items.push();
+      const id = new mongoose.Types.ObjectId(`${productId}`);
+      wishlist.items.push(id);
 
     }
 
