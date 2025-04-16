@@ -33,6 +33,8 @@ export const register = async (req: Request, res: Response) => {
     } else {
       message = 'Account already exists.'; // fallback
     }
+
+    res.json({error: true, message})
   }
 
     const user = await User.create(req.body);
