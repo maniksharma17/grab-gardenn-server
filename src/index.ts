@@ -10,8 +10,8 @@ import { orderRouter } from './routes/order.routes';
 import { checkoutRouter } from './routes/checkout.routes';
 import { errorHandler } from './middleware/error.middleware';
 import { categoryRouter } from './routes/category.routes';
-import { PromoCode } from './models/promo.model';
 import { promoRouter } from './routes/promo.routes';
+import wishlistRouter from './routes/wishlist.routes';
 
 dotenv.config();
 
@@ -34,6 +34,7 @@ app.use('/api/orders', orderRouter);
 app.use('/api/checkout', checkoutRouter);
 app.use('/api/categories', categoryRouter);
 app.use('/api/promo-code', promoRouter);
+app.use('/api/wishlist', wishlistRouter);
 
 // Error handling middleware
 app.use(errorHandler);
