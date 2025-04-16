@@ -27,17 +27,20 @@ export interface Cart {
   ],
 }
 
-export interface User {
+export interface UserTypes {
   _id: string;
   name: string;
   email: string;
   password: string;
+  phone: string;
   address: [{
     street: string,
     city: string,
     state: string,
     zipcode: string,
-    country: string
+    country: string,
+    name: string,
+    phone: string
   }]
 }
 

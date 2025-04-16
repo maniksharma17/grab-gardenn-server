@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { User } from '../models/user.model';
 import { userSchema, loginSchema } from '../schemas/user.schema';
+import { User } from '../models/user.model';
+
+
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -17,6 +19,11 @@ export const register = async (req: Request, res: Response) => {
     const existingUser = await User.findOne({email: req.body.email})
     if(existingUser){
       res.json({message: "Account already registered with this email.", error: true})
+      return;
+    }
+
+    if((existingUser as unknown as UserTypes)?.phone === req.body.phone){
+      res.json({message: "Account already registered with this phone number.", error: true})
       return;
     }
 
@@ -170,6 +177,8 @@ export const updateAddress = async (req: Request, res: Response) => {
 
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
+import { UserTypes } from '../types';
+
 
 export const forgotPassword = async (req: Request, res: Response) => {
   const { email } = req.body;
