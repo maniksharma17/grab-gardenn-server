@@ -67,3 +67,15 @@ export const removeFromWishlist = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Server error', error });
   }
 };
+
+export const clearWishlist = async (req: Request, res: Response) => {
+  try {
+    const wishlist = await Wishlist.findOne({ user: req.params.id });
+    if (!wishlist) return res.status(404).json({ message: 'Wishlist not found' });
+
+    await Wishlist.findByIdAndDelete(wishlist._id)
+    res.json({ message: 'Wishlist cleared', wishlist });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error });
+  }
+};

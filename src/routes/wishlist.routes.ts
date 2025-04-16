@@ -8,5 +8,7 @@ wishlistRouter.use(auth);
 wishlistRouter.get('/:id', getWishlist);
 wishlistRouter.post('/add/:id', addToWishlist);
 wishlistRouter.post('/remove/:id', removeFromWishlist);
+wishlistRouter.delete('/:id', removeFromWishlist);
+
 
 export default wishlistRouter;
