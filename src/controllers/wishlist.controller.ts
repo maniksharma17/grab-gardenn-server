@@ -6,9 +6,9 @@ export const getWishlist = async (req: Request, res: Response) => {
   try {
     const wishlist = await Wishlist.findOne({ user: req.params.id }).populate('items.product');
 
-    if (!wishlist) return res.json({ items: [] });
+    if (!wishlist) return res.json({ wishlist: [] });
 
-    res.json(wishlist);
+    res.json({ wishlist });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error });
   }
