@@ -2,6 +2,15 @@ import { Request, Response } from "express";
 import { PromoCode } from "../models/promo.model";
 import { Order } from "../models/order.model";
 
+export const getPromos = async (req: Request, res: Response) => {
+  try{
+    const promos = await PromoCode.find({active: true});
+    res.status(200).json(promos);
+  } catch (e) {
+    res.status(500).json({ message: "Some server occured." });
+  }
+};
+
 export const applyPromoCode = async (req: Request, res: Response) => {
   const { code, total, userId } = req.body;
 
@@ -33,7 +42,6 @@ export const applyPromoCode = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'You have already used this promo code' });
     }
   }
-  
 
   const discountAmount = promo.type === 'percent'
     ? Math.floor(total * (promo.value / 100))
