@@ -23,9 +23,10 @@ export const addToWishlist = async (req: Request, res: Response) => {
     let wishlist = await Wishlist.findOne({ user: req.params.id });
 
     if (!wishlist) {
+      const id = new mongoose.Types.ObjectId(`${productId}`);
       wishlist = new Wishlist({
         user: req.params.id,
-        items: [{ product: productId }],
+        items: [id],
       });
     } else {
       const alreadyExists = wishlist.items.find(
