@@ -16,16 +16,24 @@ export const register = async (req: Request, res: Response) => {
       return;
     }
 
-    const existingUser = await User.findOne({email: req.body.email})
-    if(existingUser){
-      res.json({message: "Account already registered with this email.", error: true})
-      return;
+    const existingUser = await User.findOne({
+      $or: [
+        { email: req.body.email },
+        { phone: req.body.phone }
+      ]
+    });
+    
+    if (existingUser) {
+      let message = '';
+    
+    if (existingUser.email === req.body.email) {
+      message = 'Account already registered with this email.';
+    } else if (existingUser.phone === req.body.phone) {
+      message = 'Account already registered with this phone number.';
+    } else {
+      message = 'Account already exists.'; // fallback
     }
-
-    if((existingUser as unknown as UserTypes)?.phone === req.body.phone){
-      res.json({message: "Account already registered with this phone number.", error: true})
-      return;
-    }
+  }
 
     const user = await User.create(req.body);
     
