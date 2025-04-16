@@ -1,5 +1,4 @@
 import Wishlist from "../models/wishlist.model";
-import { Product } from "../models/product.model";
 import { Request, Response } from "express";
 
 // GET /wishlist - Get user's wishlist
