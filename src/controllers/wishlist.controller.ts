@@ -1,5 +1,6 @@
 import Wishlist from "../models/wishlist.model";
 import { Request, Response } from "express";
+import mongoose, { ObjectId } from "mongoose";
 
 // GET /wishlist - Get user's wishlist
 export const getWishlist = async (req: Request, res: Response) => {
@@ -34,8 +35,10 @@ export const addToWishlist = async (req: Request, res: Response) => {
       if (alreadyExists) {
         return res.status(400).json({ error: true, message: 'Item already in wishlist' });
       }
+      
+      const id = new mongoose.Types.ObjectId(`${productId.toString()}`);
+      wishlist.items.push();
 
-      wishlist.items.push(productId);
     }
 
     await wishlist.save();
