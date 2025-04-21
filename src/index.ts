@@ -36,7 +36,7 @@ app.use('/api/checkout', checkoutRouter);
 app.use('/api/categories', categoryRouter);
 app.use('/api/promo-code', promoRouter);
 app.use('/api/wishlist', wishlistRouter);
-app.use('/api./reviews', reviewRouter) ;
+app.use('/api/reviews', reviewRouter) ;
 
 // Error handling middleware
 app.use(errorHandler);
