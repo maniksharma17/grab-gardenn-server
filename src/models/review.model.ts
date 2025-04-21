@@ -24,5 +24,5 @@ const reviewSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
-const Review = mongoose.model('Wishlist', reviewSchema);
+const Review = mongoose.model('Review', reviewSchema);
 export default Review;
