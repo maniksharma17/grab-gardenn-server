@@ -5,11 +5,9 @@ import { userSchema, loginSchema } from '../schemas/user.schema';
 import { User } from '../models/user.model';
 
 
-
 export const register = async (req: Request, res: Response) => {
   try {
     const isValid = userSchema.safeParse(req.body);
-    console.log(req.body)
 
     if(!isValid.success) {
       res.status(400).json({ message: 'Invalid email and password', errors: isValid.error.errors });
@@ -60,15 +58,21 @@ export const register = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const validatedData = loginSchema.parse(req.body);
-    const user = await User.findOne({ email: validatedData.email });
+
+    const identifier = validatedData.emailOrPhone; 
+    const password = validatedData.password;
+
+    const user = await User.findOne({
+      $or: [{ email: identifier }, { phone: identifier }],
+    });
 
     if (!user) {
-      return res.json({ error: true, message: 'Email not registered' });
+      return res.json({ error: true, message: 'Account not found' });
     }
 
-    const isValidPassword = await bcrypt.compare(validatedData.password, user.password);
+    const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
-      return res.json({ error: true, message: 'Incorrect email and password' });
+      return res.json({ error: true, message: 'Incorrect credentials' });
     }
 
     const token = jwt.sign(
@@ -79,13 +83,13 @@ export const login = async (req: Request, res: Response) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: true,
-       sameSite: 'lax',
-      domain: 'grabgardenn.com'
+      sameSite: 'lax',
+      domain: 'grabgardenn.com',
     });
 
     res.json({ user: { ...user.toObject(), password: undefined }, token });
   } catch (error) {
-    return res.status(500).json({ message: 'Some server error occured' });
+    return res.status(500).json({ message: 'Some server error occurred' });
   }
 };
 
