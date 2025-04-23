@@ -96,14 +96,15 @@ export const createDirectCheckoutSession = async (
       }
     }
 
-    let total = req.body.price;
+    let total = req.body.total;
     const deliveryRate = req.body.deliveryRate;
+    const promoCodeDiscount = req.body.promoCodeDiscount;
 
     let amount = 0;
     if(total >= 1000) {
-      amount = total;
+      amount = total - promoCodeDiscount;
     } else {
-      amount = total + deliveryRate
+      amount = total + deliveryRate - promoCodeDiscount;
     }
 
     const options = {
@@ -254,11 +255,14 @@ export const verifyDirectPayment = async (req: Request, res: Response) => {
       razorpay_signature,
       deliveryRate,
       shippingAddress,
+      total,
       price,
       product,
       quantity,
       variant,
-      dimensions
+      dimensions,
+      promoCode,
+      promoCodeDiscount
     } = req.body;
 
     const key_secret = process.env.RAZORPAY_KEY_SECRET;
@@ -279,11 +283,11 @@ export const verifyDirectPayment = async (req: Request, res: Response) => {
     }
 
 
-    let total = 0;
-    if(price >= 1000) {
-      total = price
+    let amount = 0;
+    if(total >= 1000) {
+      amount = total - promoCodeDiscount;
     } else {
-      total = price + deliveryRate
+      amount = total + deliveryRate - promoCodeDiscount;
     }
 
     const orderItems = [
@@ -299,7 +303,11 @@ export const verifyDirectPayment = async (req: Request, res: Response) => {
     const order = await Order.create({
       user: req.params.id,
       items: orderItems,
-      total: total,
+      total: amount,
+      deliveryRate: total >= 1000 ? 0 : deliveryRate,
+      freeShipping: total >= 1000,
+      promoCode,
+      promoCodeDiscount,
       shippingAddress: shippingAddress,
       paymentId: razorpay_payment_id,
       paymentOrderId: razorpay_order_id,
