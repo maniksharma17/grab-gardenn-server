@@ -53,12 +53,13 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
       total += item.price * item.quantity;
     }
     const deliveryRate = req.body.deliveryRate;
+    const promoCodeDiscount = req.body.promoCodeDiscount;
 
     let amount = 0;
     if(total >= 1000) {
-      amount = total;
+      amount = total - promoCodeDiscount;
     } else {
-      amount = total + deliveryRate
+      amount = total + deliveryRate - promoCodeDiscount;
     }
 
     const options = {
@@ -139,6 +140,9 @@ export const verifyPayment = async (req: Request, res: Response) => {
       razorpay_payment_id,
       razorpay_signature,
       deliveryRate,
+      shippingAddress,
+      promoCode,
+      promoCodeDiscount
     } = req.body;
 
     const key_secret = process.env.RAZORPAY_KEY_SECRET;
@@ -201,16 +205,20 @@ export const verifyPayment = async (req: Request, res: Response) => {
     }
 
     if(total >= 1000) {
-      total = total + 0;
+      total = total - promoCodeDiscount;
     } else {
-      total = total + deliveryRate
+      total = total + deliveryRate - promoCodeDiscount;
     }
 
     const order = await Order.create({
       user: req.params.id,
       items: orderItems,
       total: total,
-      shippingAddress: req.body.shippingAddress,
+      shippingAddress,
+      deliveryRate: total >= 1000 ? 0 : deliveryRate,
+      freeShipping: total >= 1000,
+      promoCode,
+      promoCodeDiscount,
       paymentId: razorpay_payment_id,
       paymentOrderId: razorpay_order_id,
       type: "prepaid",
