@@ -61,6 +61,7 @@ export const createCheckoutSession = async (req: Request, res: Response) => {
     } else {
       amount = total + deliveryRate - promoCodeDiscount;
     }
+    console.log(amount, "AMOUNT");
 
     const options = {
       amount: Math.round(amount * 100), 
