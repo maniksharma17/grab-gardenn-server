@@ -111,8 +111,6 @@ export const oAuthLogin =  async (req: Request, res: Response) => {
     user = new User({
       name,
       email,
-      phone: "",
-      address: [],
     });
     await user.save();
   }
