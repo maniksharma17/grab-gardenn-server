@@ -103,6 +103,63 @@ export const logout = (req: Request, res: Response) => {
   res.json({ message: 'Logged out successfully' });
 };
 
+export const oAuthLogin =  async (req: Request, res: Response) => {
+  const { email, name } = req.body;
+  let user = await User.findOne({ email });
+
+  if (!user) {
+    user = new User({
+      name,
+      email,
+      phone: "",
+      address: [],
+    });
+    await user.save();
+  }
+
+  const token = jwt.sign(
+    { userId: user._id },
+    process.env.JWT_SECRET || 'secret',
+  );
+
+  res.json({
+    user,
+    token,
+  });
+};
+
+export const completeProfile =  async (req: Request, res: Response) => {
+  const userId = req.params.id; 
+  const { phone, address } = req.body;
+
+  if (!phone || !address) {
+    return res.status(400).json({ message: 'Phone and address are required.' });
+  }
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        phone,
+        address: [address], 
+      },
+      { new: true }
+    );
+
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    res.json({
+      message: 'Profile updated successfully',
+      phone: user.phone,
+      address: user.address,
+    });
+  } catch (err) {
+    console.error('Update failed:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+
 export const getProfile = async (req: Request, res: Response) => {
   const user = await User.findById(req.params.id).select('-password');
   res.json({ user });
