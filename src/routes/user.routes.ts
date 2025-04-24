@@ -8,7 +8,7 @@ userRouter.post('/register', register);
 userRouter.post('/login', login);
 userRouter.post('/logout', logout);
 userRouter.post('/oauth-login', oAuthLogin);
-userRouter.patch('/complete-profile', auth, completeProfile);
+userRouter.patch('/complete-profile/:id', auth, completeProfile);
 userRouter.get('/profile/:id', auth, getProfile);
 userRouter.put('/:id/address', auth, addAddress)
 userRouter.put('/:userId/:addressId', auth, updateAddress);
