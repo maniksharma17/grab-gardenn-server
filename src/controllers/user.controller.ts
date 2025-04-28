@@ -126,9 +126,7 @@ export const oAuthLogin =  async (req: Request, res: Response) => {
   });
 };
 
-import { Request, Response } from 'express';
-import User from '../models/User'; // Adjust path
-import mongoose from 'mongoose';
+
 
 export const completeProfile = async (req: Request, res: Response) => {
   const userId = req.params.id;
