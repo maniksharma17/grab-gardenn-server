@@ -250,35 +250,49 @@ import { UserTypes } from '../types';
 
 
 export const forgotPassword = async (req: Request, res: Response) => {
-  const { email } = req.body;
+  const { emailOrPhone } = req.body;
 
-  const user = await User.findOne({ email });
-  if (!user) return res.status(404).json({ message: "Email not registered" });
+  if (!emailOrPhone) {
+    return res.status(400).json({ message: "Please provide email or phone number" });
+  }
+
+  const user = await User.findOne({
+    $or: [{ email: emailOrPhone }, { phone: emailOrPhone }]
+  });
+
+  if (!user) {
+    return res.status(404).json({ message: "Account not found with given email or phone" });
+  }
 
   const resetToken = crypto.randomBytes(32).toString('hex');
   const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
 
   user.resetPasswordToken = resetTokenHash;
-  user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000); 
+  user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
   await user.save();
 
   const resetURL = `https://grabgardenn.com/reset-password/${resetToken}`;
 
-  // send mail using nodemailer (free SMTP config)
+  // Setup nodemailer transporter
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: process.env.SMTP_EMAIL, // your Gmail
-      pass: process.env.SMTP_PASS   // app password
+      user: process.env.SMTP_EMAIL,
+      pass: process.env.SMTP_PASS
     }
   });
 
   await transporter.sendMail({
     from: `"Grab Gardenn" <${process.env.SMTP_EMAIL}>`,
-    to: user.email,
+    to: user.email, // Always send to registered email
     subject: 'Password Reset Request',
-    html: `<p>Click the link to reset your password:</p><a href="${resetURL}">${resetURL}</a><p>This link is valid for 15 minutes.</p>`
+    html: `
+      <p>Hello ${user.name || ''},</p>
+      <p>We received a request to reset your password. Click the link below:</p>
+      <a href="${resetURL}">${resetURL}</a>
+      <p>This link will expire in 15 minutes.</p>
+    `
   });
 
   res.status(200).json({ message: "Reset email sent successfully" });
