@@ -126,8 +126,12 @@ export const oAuthLogin =  async (req: Request, res: Response) => {
   });
 };
 
-export const completeProfile =  async (req: Request, res: Response) => {
-  const userId = req.params.id; 
+import { Request, Response } from 'express';
+import User from '../models/User'; // Adjust path
+import mongoose from 'mongoose';
+
+export const completeProfile = async (req: Request, res: Response) => {
+  const userId = req.params.id;
   const { phone, address } = req.body;
 
   if (!phone || !address) {
@@ -135,25 +139,35 @@ export const completeProfile =  async (req: Request, res: Response) => {
   }
 
   try {
+    // First, check if the phone number already exists for another user
+    const existingUser = await User.findOne({ phone });
+
+    if (existingUser && existingUser._id.toString() !== userId) {
+      return res.status(409).json({ message: 'Phone number already in use by another account.' });
+    }
+
+    // Now safely update the user
     const user = await User.findByIdAndUpdate(
       userId,
       {
         phone,
-        address: [address], 
+        address: [address], // assuming address is an object
       },
       { new: true }
     );
 
-    if (!user) return res.status(404).json({ message: 'User not found' });
+    if (!user) {
+      return res.status(404).json({ message: 'User not found.' });
+    }
 
     res.json({
-      message: 'Profile updated successfully',
+      message: 'Profile updated successfully.',
       phone: user.phone,
       address: user.address,
     });
   } catch (err) {
-    console.error('Update failed:', err);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Profile update failed:', err);
+    res.status(500).json({ message: 'Server error.' });
   }
 };
 
