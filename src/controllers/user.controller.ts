@@ -294,8 +294,21 @@ export const forgotPassword = async (req: Request, res: Response) => {
       <p>This link will expire in 15 minutes.</p>
     `
   });
+  function maskEmail(email: string) {
+    const [localPart, domain] = email.split('@');
+    if (localPart.length <= 2) {
+      return '*'.repeat(localPart.length) + '@' + domain;
+    }
+    const visibleChars = localPart.slice(0, 3);
+    const maskedPart = '*'.repeat(localPart.length - 2);
+    return `${visibleChars}${maskedPart}@${domain}`;
+  }
+  
 
-  res.status(200).json({ message: "Reset email sent successfully" });
+  res.status(200).json({ 
+    message: `Reset email sent successfully to ${maskEmail(user.email)}`
+  });
+  
 };
 
 
