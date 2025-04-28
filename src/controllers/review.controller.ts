@@ -19,8 +19,8 @@ export const addReview = async (req: Request, res: Response) => {
   const { userId } = req.params;
   const { rating, comment, productId } = req.body;
 
-  if (!rating || !comment)
-    return res.status(400).json({ message: 'Rating and comment are required' });
+  if (!rating)
+    return res.status(400).json({ message: 'Rating is required' });
 
   try {
     const existing = await Review.findOne({ user: userId, product: productId });
