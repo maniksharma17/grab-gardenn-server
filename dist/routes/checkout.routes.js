@@ -1,0 +1,18 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.checkoutRouter = void 0;
+const express_1 = require("express");
+const checkout_controller_1 = require("../controllers/checkout.controller");
+const auth_middleware_1 = require("../middleware/auth.middleware");
+exports.checkoutRouter = (0, express_1.Router)();
+exports.checkoutRouter.post('/create-checkout-session/:id', auth_middleware_1.auth, checkout_controller_1.createCheckoutSession);
+exports.checkoutRouter.post('/create-direct-checkout-session/:id', auth_middleware_1.auth, checkout_controller_1.createDirectCheckoutSession);
+exports.checkoutRouter.post('/verify-payment/:id', auth_middleware_1.auth, checkout_controller_1.verifyPayment);
+exports.checkoutRouter.post('/verify-direct-payment/:id', auth_middleware_1.auth, checkout_controller_1.verifyDirectPayment);
+exports.checkoutRouter.post('/delivery-rate', auth_middleware_1.auth, checkout_controller_1.calculateDeliveryCharge);
+exports.checkoutRouter.post('/direct-delivery-rate', checkout_controller_1.calculateDeliveryChargeWithoutCart);
+exports.checkoutRouter.post('/place-shiprocket-prepaid-order', auth_middleware_1.auth, checkout_controller_1.createShiprocketOrder);
+exports.checkoutRouter.post('/place-shiprocket-cod-order/:id', auth_middleware_1.auth, checkout_controller_1.createCodOrder);
+exports.checkoutRouter.post('/place-direct-shiprocket-cod-order/:id', auth_middleware_1.auth, checkout_controller_1.createDirectCodOrder);
+exports.checkoutRouter.post('/cancel-order', auth_middleware_1.auth, checkout_controller_1.cancelShiprocketOrder);
+exports.checkoutRouter.get("/get-awb_id/:order_id", auth_middleware_1.auth, checkout_controller_1.getExistingAWB);
