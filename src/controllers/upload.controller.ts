@@ -19,7 +19,7 @@ export const generatePresignedUrl = async (req: Request, res: Response) => {
     Key: key,
     ContentType: fileType,
     ACL: 'public-read',
-    Expires: 60, // URL valid for 1 minute
+    Expires: 60, 
   };
 
   try {
