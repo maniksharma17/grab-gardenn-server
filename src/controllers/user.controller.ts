@@ -4,7 +4,6 @@ import jwt from 'jsonwebtoken';
 import { userSchema, loginSchema } from '../schemas/user.schema';
 import { User } from '../models/user.model';
 
-
 export const register = async (req: Request, res: Response) => {
   try {
     const isValid = userSchema.safeParse(req.body);
@@ -45,8 +44,7 @@ export const register = async (req: Request, res: Response) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: true,
-      sameSite: 'lax',
-      domain: 'grabgardenn.com'
+      sameSite: 'none',
     });
 
     res.status(201).json({ user: { ...user.toObject(), password: undefined }, token });
@@ -83,8 +81,7 @@ export const login = async (req: Request, res: Response) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: true,
-      sameSite: 'lax',
-      domain: 'grabgardenn.com',
+      sameSite: 'none',
     });
 
     res.json({ user: { ...user.toObject(), password: undefined }, token });

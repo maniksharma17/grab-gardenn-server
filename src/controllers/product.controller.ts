@@ -12,7 +12,8 @@ export const getProducts = async (req: Request, res: Response) => {
   const products = await Product.find(query)
     .sort(sort ? { [sort as string]: -1 } : { createdAt: 1 })
     .limit(Number(limit))
-    .skip((Number(page) - 1) * Number(limit));
+    .skip((Number(page) - 1) * Number(limit))
+    .populate('category');
 
   const total = await Product.countDocuments(query);
 
@@ -26,6 +27,14 @@ export const getProducts = async (req: Request, res: Response) => {
 
 export const getProduct = async (req: Request, res: Response) => {
   const product = await Product.findById(req.params.id).populate('category');
+  if (!product) {
+    return res.status(404).json({ message: 'Product not found' });
+  }
+  res.json({ product });
+};
+
+export const getProductDashboard = async (req: Request, res: Response) => {
+  const product = await Product.findById(req.params.id);
   if (!product) {
     return res.status(404).json({ message: 'Product not found' });
   }
@@ -53,7 +62,8 @@ export const updateProduct = async (req: Request, res: Response) => {
     const productData = req.body;
     const isValid = productSchema.safeParse(productData);
     if(!isValid.success) {
-      res.json({ message: "Invalid data" });
+      res.status(400).json({ message: "Invalid data" });
+      console.log(isValid.error);
       return;
     }
     const {id} = req.params;

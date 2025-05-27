@@ -78,7 +78,10 @@ const orderSchema = new mongoose.Schema({
   paymentOrderId: {
     type: String,
   },
-  shiprocketOrderId: {
+  shippingOrderId: {
+    type: String,
+  },
+  awbNumber: {
     type: String,
   },
   deliveryRate: {

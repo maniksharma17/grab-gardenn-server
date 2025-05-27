@@ -52,6 +52,15 @@ export const createOrder = async (req: Request, res: Response) => {
   res.status(201).json({ order });
 };
 
+
+export const getAllOrders = async (req: Request, res: Response) => {
+  const orders = await Order.find()
+    .populate('user', 'name email')
+    .populate('items.product')
+    .sort({ createdAt: -1 });
+  res.json({ orders });
+};
+
 export const getOrders = async (req: Request, res: Response) => {
   const orders = await Order.find({ user: req.params.id })
     .populate('items.product')

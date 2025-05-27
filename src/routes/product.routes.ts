@@ -4,7 +4,8 @@ import {
   getProduct, 
   createProduct, 
   updateProduct, 
-  deleteProduct 
+  deleteProduct,
+  getProductDashboard
 } from '../controllers/product.controller';
 
 export const productRouter = Router();
@@ -14,6 +15,7 @@ productRouter.get('/', getProducts);
 
 // ✅ Get a single product by ID
 productRouter.get('/:id', getProduct);
+productRouter.get('/dashboard/:id', getProductDashboard);
 
 // ✅ Create a new product
 productRouter.post('/', createProduct);

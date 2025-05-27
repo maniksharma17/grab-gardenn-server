@@ -416,7 +416,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
     );
     console.log("ORDER GENERATED:", response.data);
 
-    order.shiprocketOrderId = response.data.order_id;
+    order.shippingOrderId = response.data.order_id;
     await order.save();
 
     try{
@@ -613,6 +613,7 @@ export const createCodOrder = async (req: Request, res: Response) => {
     req.body.paymentMethod = "COD";
     req.body.courierId = courierId;
     await createShiprocketOrder(req, res);
+
   } catch (error) {
     console.error("COD Order creation error:", error);
     res.status(500).json({ message: "Error creating COD order" });
@@ -682,10 +683,11 @@ export const createDirectCodOrder = async (req: Request, res: Response) => {
   user?.orders.push(order._id)
   await user?.save()
 
-    req.body.orderId = order._id;
-    req.body.paymentMethod = "COD";
-    req.body.courierId = courierId;
-    await createShiprocketOrder(req, res);
+  req.body.orderId = order._id;
+  req.body.paymentMethod = "COD";
+  req.body.courierId = courierId;
+  await createShiprocketOrder(req, res);
+
   } catch (error) {
     console.error("COD Order creation error:", error);
     res.status(500).json({ message: "Error creating COD order" });
@@ -815,5 +817,333 @@ export const getExistingAWB = async (req: Request, res: Response) => {
       message: "Failed to fetch AWB ID",
       error: error?.response?.data || error.message,
     });
+  }
+};
+
+
+
+// SHIPMOZO CONFIG
+const SHIPMOZO_API_BASE = "https://shipping-api.com/app/api/v1"
+
+export const calculateDeliveryCharge2 = async (req: Request, res: Response) => {
+  try {
+    const { userId, destinationPincode, cod } = req.body;
+
+    const cart = await Cart.findOne({ user: userId }).populate("items.product");
+
+    if (!cart || cart.items.length === 0) {
+      return res.status(400).json({ message: "Cart is empty" });
+    }
+
+    // Calculate weight and dimensions
+    let totalWeight = 0;
+    let maxLength = 0;
+    let maxBreadth = 0;
+    let totalHeight = 0;
+    let totalAmount = 0;
+
+    for (const item of cart.items) {
+      totalWeight += (item.variant?.value ?? 0) * item.quantity;
+      totalAmount += item.price * item.quantity;
+      maxLength = Math.max(maxLength, item.dimensions?.length ?? 0);
+      maxBreadth = Math.max(maxBreadth, item.dimensions?.breadth ?? 0);
+      totalHeight += item.dimensions?.height ?? 0 * item.quantity;
+    }
+
+    const params = {
+      pickup_pincode: "247667",
+      delivery_pincode: destinationPincode,
+      weight: (totalWeight*1000).toString(),
+      order_amount: totalAmount.toString(),
+      dimensions: [
+      {
+        no_of_box: 1,
+        length: (maxLength*2.54).toString(),
+        width: (maxBreadth*2.54).toString(),
+        height: (totalHeight*2.54).toString()
+      }
+      ],
+      payment_type: cod === "1" ? "COD" : "PREPAID",
+      shipment_type: "FORWARD",
+      type_of_package: "SPS",
+      rov_type: "ROV_OWNER",
+      order_id: "",
+      cod_amount: cod === "1" ? totalAmount.toString() : "0",
+    }
+
+    const response = await axios.post(
+      `${SHIPMOZO_API_BASE}/rate-calculator`, params,
+      { 
+        headers: { 
+          "public-key": process.env.SHIPMOZO_PUBLIC_KEY || "",
+          "private-key": process.env.SHIPMOZO_PRIVATE_KEY || ""
+        },
+      }
+    );
+
+    const shippingOptions = response.data.data;
+
+    if (!shippingOptions || shippingOptions.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "No courier options available for this pincode." });
+    }
+
+    // You can return all options or pick the cheapest
+    const cheapest = shippingOptions.reduce((a: any, b: any) =>
+      a.total_charges < b.total_charges ? a : b
+    );
+
+    res.json({
+      estimatedDeliveryDays: cheapest.estimatedDelivery,
+      deliveryCharge: cheapest.total_charges,
+      courierName: cheapest.name,
+      courierId: cheapest.id
+    });
+  } catch (error) {
+    console.error("Error calculating delivery charge:", error);
+    res.status(500).json({ message: "Failed to calculate delivery charge" });
+  }
+};
+
+
+export const calculateDeliveryChargeWithoutCart2 = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { destinationPincode, weight, cod, totalAmount, length, breadth, height, quantity } = req.body;
+
+    const totalWeight = weight * quantity;
+    const totalHeight = height * quantity;
+
+    const params = {
+      pickup_pincode: "247667",
+      delivery_pincode: destinationPincode,
+      weight: (totalWeight*1000).toString(),
+      order_amount: totalAmount.toString(),
+      dimensions: [
+      {
+        no_of_box: 1,
+        length: (length*2.54).toString(),
+        width: (breadth*2.54).toString(),
+        height: (totalHeight*2.54).toString()
+      }
+      ],
+      payment_type: cod === "1" ? "COD" : "PREPAID",
+      shipment_type: "FORWARD",
+      type_of_package: "SPS",
+      rov_type: "ROV_OWNER",
+      order_id: "",
+      cod_amount: cod === "1" ? totalAmount.toString() : "0",
+    }
+
+    console.log(params, "params");
+
+     const response = await axios.post(
+      `${SHIPMOZO_API_BASE}/rate-calculator`, params,
+      { 
+        headers: { 
+          "public-key": process.env.SHIPMOZO_PUBLIC_KEY || "",
+          "private-key": process.env.SHIPMOZO_PRIVATE_KEY || ""
+        },
+      }
+    );
+
+    const shippingOptions = response.data.data;
+
+    if (!shippingOptions || shippingOptions.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "No courier options available for this pincode." });
+    }
+
+    // You can return all options or pick the cheapest
+    const cheapest = shippingOptions.reduce((a: any, b: any) =>
+      a.total_charges < b.total_charges ? a : b
+    );
+
+    res.json({
+      estimatedDeliveryDays: cheapest.estimatedDelivery,
+      deliveryCharge: cheapest.total_charges,
+      courierName: cheapest.name,
+      courierId: cheapest.id
+    });
+
+  } catch (error) {
+    console.error("Error calculating delivery charge:", error);
+    res.status(500).json({ message: "Failed to calculate delivery charge" });
+  }
+};
+
+
+export const createShipmozoOrder = async (req: Request, res: Response) => {
+  try {
+
+    const { orderId, paymentMethod, courierId } = req.body;
+    const order = await Order.findById(orderId)
+      .populate("items.product")
+      .populate("user");
+    const user = order?.user as any;
+
+    if (!order) {
+      res.status(404).json({ message: "Order not found" });
+      return;
+    }
+
+    let totalWeight = 0;
+    let maxLength = 0;
+    let maxBreadth = 0;
+    let totalHeight = 0;
+
+    let total = 0;
+
+    order.items.forEach((item) => {
+      total += item.price * item.quantity;
+      totalWeight += (item.variant?.value as any) * item.quantity;
+    
+      const lengthCm = (item.dimensions?.length ?? 0) * 2.54;
+      const breadthCm = (item.dimensions?.breadth ?? 0) * 2.54;
+      const heightCm = (item.dimensions?.height ?? 0) * 2.54;
+    
+      maxLength = Math.max(maxLength, lengthCm);
+      maxBreadth = Math.max(maxBreadth, breadthCm);
+      totalHeight += heightCm * item.quantity;
+    });
+
+    const shipmozoOrder = {
+      order_id: order._id.toString(),
+      order_date: new Date().toISOString(),
+      pickup_location: "Primary",
+      order_type: "Order",
+      consignee_name: order.shippingAddress?.name || "",
+      consignee_address_line_one: order.shippingAddress?.street || "",
+      consignee_address_line_two: order.shippingAddress?.streetOptional || "",
+      consignee_city: order.shippingAddress?.city || "",
+      consignee_pin_code: order.shippingAddress?.zipCode || "",
+      consignee_state: order.shippingAddress?.state || "",
+      consignee_email: user.email || "",
+      consignee_phone: order.shippingAddress?.phone || "",
+      payment_method: paymentMethod.toString().toUpperCase(), 
+      sub_total: total,
+      length: maxLength || 10,
+      width: maxBreadth || 10,
+      height: totalHeight || 10,
+      weight: totalWeight*1000,
+      product_detail: order.items.map((item) => ({
+        name: (item.product as any).name.toString(),
+        sku_number: (item.product as any)._id.toString(),
+        quantity: item.quantity,
+        unit_price: item.price,
+      })),
+      shipping_charges: order.deliveryRate,
+      total_discount: order.promoCodeDiscount,
+      warehouse_id: "56046",
+      gst_ewaybill_number: "",
+      gstin_number: ""
+    };
+
+    const response = await axios.post(
+      `${SHIPMOZO_API_BASE}/push-order`,
+      shipmozoOrder,
+      {
+        headers: { 
+          "public-key": process.env.SHIPMOZO_PUBLIC_KEY || "",
+          "private-key": process.env.SHIPMOZO_PRIVATE_KEY || ""
+        },
+      }
+    );
+    console.log("ORDER GENERATED:", response.data);
+
+    const shippingId = response.data.data.order_id;
+
+    order.shippingOrderId = response.data.data.order_id;
+    await order.save();
+
+    try{
+      const awbFetchCall = await axios.post(
+        `${SHIPMOZO_API_BASE}/assign-courier`,
+        {
+          order_id: shippingId,
+          courier_id: courierId
+        },
+        {
+          headers: {
+            "public-key": process.env.SHIPMOZO_PUBLIC_KEY || "",
+            "private-key": process.env.SHIPMOZO_PRIVATE_KEY || ""
+          },
+        }
+      );
+      console.log("AWB GENERATED:", awbFetchCall.data);
+
+    } catch (err) {
+      res.json({ success: true, shiprocketOrderId: response.data.order_id });
+    }
+
+    try {
+      const pickupRequestCall = await axios.post(
+        `${SHIPMOZO_API_BASE}/schedule-pickup`,
+        {
+          order_id: shippingId,
+        },
+        {
+          headers: {
+            "public-key": process.env.SHIPMOZO_PUBLIC_KEY || "",
+            "private-key": process.env.SHIPMOZO_PRIVATE_KEY || ""
+          },
+        }
+      );
+      console.log("PICKUP REQUEST GENERATED:", pickupRequestCall.data);
+    } catch (error) {
+      console.log(error);
+    }
+
+    res.json({ success: true, shiprocketOrderId: response.data.order_id });
+  } catch (error) {
+    console.error("Shiprocket order creation error:", error);
+    res.status(500).json({ message: "Error creating Shiprocket order" });
+  }
+};
+
+export const cancelShipmozoOrder = async (req: Request, res: Response) => {
+  try {
+    const { shipmozoOrderId, awbNumber, reason } = req.body;
+
+    if (!shipmozoOrderId) {
+      return res.status(400).json({ message: "Order ID is required" });
+    }
+
+    const response = await axios.post(
+      `${SHIPMOZO_API_BASE}/cancel-order`,
+      {
+        order_id: shipmozoOrderId,
+        awb_number: awbNumber
+      },
+      {
+        headers: {
+          "public-key": process.env.SHIPMOZO_PUBLIC_KEY || "",
+          "private-key": process.env.SHIPMOZO_PRIVATE_KEY || ""
+        },
+      }
+    );
+
+    if (response.data.status_code === 200 || response.data.status == 200) {
+      await Order.updateOne({shippingOrderId: shipmozoOrderId}, {
+        status: 'cancelled',
+        cancellationReason: reason
+      })
+      return res.status(200).json({
+        message: "Order cancelled successfully",
+        data: response.data,
+      });
+    } else {
+      return res.status(500).json({
+        message: "Failed to cancel order",
+        data: response.data,
+      });
+    }
+  } catch (error: any) {
+    console.error("Error cancelling order:", error.message);
+    return res.status(500).json({ message: "Error cancelling order" });
   }
 };

@@ -11,6 +11,16 @@ export const getPromos = async (req: Request, res: Response) => {
   }
 };
 
+export const getPromoCodeById = async (req: Request, res: Response) => {
+  try{
+    const promos = await PromoCode.find({active: true, _id: req.params.id});
+    if (!promos) return res.status(404).json({ message: "Promo code not found." });
+    res.status(200).json(promos);
+  } catch (e) {
+    res.status(500).json({ message: "Some server occured." });
+  }
+};
+
 export const applyPromoCode = async (req: Request, res: Response) => {
   const { code, total, userId } = req.body;
 

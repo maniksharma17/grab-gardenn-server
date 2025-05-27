@@ -1,10 +1,10 @@
 import { Router } from 'express';
-import { createOrder, getOrders, getOrder } from '../controllers/order.controller';
+import { createOrder, getOrders, getOrder, getAllOrders } from '../controllers/order.controller';
 import { auth } from '../middleware/auth.middleware';
 
 export const orderRouter = Router();
 
-orderRouter.use(auth);
-orderRouter.post('/:id', createOrder);
-orderRouter.get('/:id', getOrders);
-orderRouter.get('/:userId/:id', getOrder);
+orderRouter.post('/:id', auth, createOrder);
+orderRouter.get('/:id', auth, getOrders);
+orderRouter.get('/', getAllOrders);
+orderRouter.get('/:userId/:id', auth, getOrder);

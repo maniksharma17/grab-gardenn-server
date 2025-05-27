@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { auth } from '../middleware/auth.middleware';
-import { applyPromoCode, getPromos } from '../controllers/promo.controller';
+import { applyPromoCode, getPromoCodeById, getPromos } from '../controllers/promo.controller';
 
 export const promoRouter = Router();
 
-promoRouter.use(auth);
-promoRouter.post('/apply', applyPromoCode);
+promoRouter.post('/apply', auth, applyPromoCode);
 promoRouter.get('/', getPromos);
+promoRouter.get('/:id', getPromoCodeById);
