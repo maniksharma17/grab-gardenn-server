@@ -8,6 +8,7 @@ exports.productRouter = (0, express_1.Router)();
 exports.productRouter.get('/', product_controller_1.getProducts);
 // ✅ Get a single product by ID
 exports.productRouter.get('/:id', product_controller_1.getProduct);
+exports.productRouter.get('/dashboard/:id', product_controller_1.getProductDashboard);
 // ✅ Create a new product
 exports.productRouter.post('/', product_controller_1.createProduct);
 // ✅ Update a product by ID

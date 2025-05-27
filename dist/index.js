@@ -15,12 +15,16 @@ const order_routes_1 = require("./routes/order.routes");
 const checkout_routes_1 = require("./routes/checkout.routes");
 const error_middleware_1 = require("./middleware/error.middleware");
 const category_routes_1 = require("./routes/category.routes");
+const promo_routes_1 = require("./routes/promo.routes");
+const wishlist_routes_1 = __importDefault(require("./routes/wishlist.routes"));
+const review_routes_1 = __importDefault(require("./routes/review.routes"));
+const upload_routes_1 = __importDefault(require("./routes/upload.routes"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
 // Middleware
 app.use((0, cors_1.default)({
-    origin: process.env.CLIENT_URL || 'http://localhost:3001',
+    origin: process.env.CLIENT_URL || 'http://localhost:3000',
     credentials: true
 }));
 app.use(express_1.default.json());
@@ -32,6 +36,10 @@ app.use('/api/cart', cart_routes_1.cartRouter);
 app.use('/api/orders', order_routes_1.orderRouter);
 app.use('/api/checkout', checkout_routes_1.checkoutRouter);
 app.use('/api/categories', category_routes_1.categoryRouter);
+app.use('/api/promo-code', promo_routes_1.promoRouter);
+app.use('/api/wishlist', wishlist_routes_1.default);
+app.use('/api/reviews', review_routes_1.default);
+app.use('/api/upload', upload_routes_1.default);
 // Error handling middleware
 app.use(error_middleware_1.errorHandler);
 // Database connection

@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getOrder = exports.getOrders = exports.createOrder = void 0;
+exports.getOrder = exports.getOrders = exports.getAllOrders = exports.createOrder = void 0;
 const order_model_1 = require("../models/order.model");
 const cart_model_1 = require("../models/cart.model");
 const product_model_1 = require("../models/product.model");
@@ -44,6 +44,14 @@ const createOrder = async (req, res) => {
     res.status(201).json({ order });
 };
 exports.createOrder = createOrder;
+const getAllOrders = async (req, res) => {
+    const orders = await order_model_1.Order.find()
+        .populate('user', 'name email')
+        .populate('items.product')
+        .sort({ createdAt: -1 });
+    res.json({ orders });
+};
+exports.getAllOrders = getAllOrders;
 const getOrders = async (req, res) => {
     const orders = await order_model_1.Order.find({ user: req.params.id })
         .populate('items.product')

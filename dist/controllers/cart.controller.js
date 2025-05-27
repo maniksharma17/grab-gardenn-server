@@ -8,13 +8,34 @@ const cart_model_1 = require("../models/cart.model");
 const product_model_1 = require("../models/product.model");
 const mongoose_1 = __importDefault(require("mongoose"));
 const getCart = async (req, res) => {
+    updateCartPrices(req.params.id);
     const cart = await cart_model_1.Cart.findOne({ user: req.params.id })
         .populate('items.product');
     res.json({ cart });
 };
 exports.getCart = getCart;
+const lodash_1 = require("lodash");
+const updateCartPrices = async (userId) => {
+    try {
+        const cart = await cart_model_1.Cart.findOne({ user: userId }).populate("items.product");
+        if (!cart)
+            return;
+        for (const item of cart.items) {
+            const product = item.product;
+            if (!product || !product.price?.length || !product.variants?.length)
+                continue;
+            const matchedIndex = product.variants.findIndex((v) => (0, lodash_1.isEqual)(v.value, item.variant?.value));
+            const priceIndex = matchedIndex >= 0 ? matchedIndex : 0;
+            item.price = product.price[priceIndex] ?? product.price[0];
+        }
+        await cart.save();
+    }
+    catch (error) {
+        console.error("Failed to update cart prices:", error);
+    }
+};
 const addToCart = async (req, res) => {
-    const { productId, quantity, dimensions, variant, price } = req.body;
+    const { productId, quantity, dimensions, variant, priceIndex } = req.body;
     const product = await product_model_1.Product.findById(productId);
     if (!product) {
         return res.status(404).json({ message: 'Product not found' });
@@ -26,21 +47,20 @@ const addToCart = async (req, res) => {
     if (!cart) {
         cart = await cart_model_1.Cart.create({
             user: req.params.id,
-            items: [{ product: productId, quantity, price, dimensions, variant }],
+            items: [{ product: productId, quantity, price: product.price[priceIndex], dimensions, variant }],
         });
     }
     else {
         const itemIndex = cart.items.findIndex(item => {
             const isSameProduct = item.product.toString() === productId;
-            const isSameVariant = JSON.stringify(item.variant) === JSON.stringify(variant);
-            const isSameDimensions = JSON.stringify(item.dimensions) === JSON.stringify(dimensions);
-            return isSameProduct && isSameVariant && isSameDimensions;
+            const isSameVariant = (item.variant?.value) === (variant.value);
+            return isSameProduct && isSameVariant;
         });
         if (itemIndex > -1) {
             cart.items[itemIndex].quantity += quantity;
         }
         else {
-            cart.items.push({ product: productId, quantity, price, dimensions, variant });
+            cart.items.push({ product: productId, quantity, price: product.price[priceIndex], dimensions, variant });
         }
         await cart.save();
     }

@@ -61,9 +61,10 @@ const orderSchema = new mongoose_1.default.Schema({
     },
     status: {
         type: String,
-        enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
-        default: 'pending',
+        enum: ['confirmed', 'processing', 'shipped', 'delivered', 'cancelled'],
+        default: 'confirmed',
     },
+    cancellationReason: String,
     shippingAddress: {
         street: String,
         streetOptional: String,
@@ -80,8 +81,23 @@ const orderSchema = new mongoose_1.default.Schema({
     paymentOrderId: {
         type: String,
     },
-    shiprocketOrderId: {
+    shippingOrderId: {
         type: String,
+    },
+    awbNumber: {
+        type: String,
+    },
+    deliveryRate: {
+        type: Number
+    },
+    freeShipping: {
+        type: Boolean
+    },
+    promoCode: {
+        type: String
+    },
+    promoCodeDiscount: {
+        type: Number
     },
     createdAt: {
         type: Date,

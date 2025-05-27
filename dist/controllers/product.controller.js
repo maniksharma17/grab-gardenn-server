@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProduct = exports.getProducts = void 0;
+exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProductDashboard = exports.getProduct = exports.getProducts = void 0;
 const product_model_1 = require("../models/product.model");
 const product_schema_1 = require("../schemas/product.schema");
 const getProducts = async (req, res) => {
@@ -13,7 +13,8 @@ const getProducts = async (req, res) => {
     const products = await product_model_1.Product.find(query)
         .sort(sort ? { [sort]: -1 } : { createdAt: 1 })
         .limit(Number(limit))
-        .skip((Number(page) - 1) * Number(limit));
+        .skip((Number(page) - 1) * Number(limit))
+        .populate('category');
     const total = await product_model_1.Product.countDocuments(query);
     res.json({
         products,
@@ -31,6 +32,14 @@ const getProduct = async (req, res) => {
     res.json({ product });
 };
 exports.getProduct = getProduct;
+const getProductDashboard = async (req, res) => {
+    const product = await product_model_1.Product.findById(req.params.id);
+    if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+    }
+    res.json({ product });
+};
+exports.getProductDashboard = getProductDashboard;
 const createProduct = async (req, res) => {
     try {
         const productData = req.body;
@@ -52,7 +61,8 @@ const updateProduct = async (req, res) => {
         const productData = req.body;
         const isValid = product_schema_1.productSchema.safeParse(productData);
         if (!isValid.success) {
-            res.json({ message: "Invalid data" });
+            res.status(400).json({ message: "Invalid data" });
+            console.log(isValid.error);
             return;
         }
         const { id } = req.params;

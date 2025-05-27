@@ -14,12 +14,10 @@ const userSchema = new mongoose_1.default.Schema({
     },
     phone: {
         type: String,
-        required: true,
         unique: true
     },
     password: {
         type: String,
-        required: true,
     },
     name: {
         type: String,
@@ -32,6 +30,8 @@ const userSchema = new mongoose_1.default.Schema({
             state: String,
             zipCode: String,
             country: String,
+            phone: String,
+            name: String
         }],
     orders: [{
             type: mongoose_1.default.Schema.Types.ObjectId,
@@ -41,6 +41,8 @@ const userSchema = new mongoose_1.default.Schema({
         type: mongoose_1.default.Schema.Types.ObjectId,
         ref: "Cart"
     },
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
     createdAt: {
         type: Date,
         default: Date.now,
