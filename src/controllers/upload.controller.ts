@@ -18,8 +18,7 @@ export const generatePresignedUrl = async (req: Request, res: Response) => {
     Bucket: process.env.AWS_BUCKET_NAME,
     Key: key,
     ContentType: fileType,
-    ACL: 'public-read',
-    Expires: 60, 
+    Expires: 120, 
   };
 
   try {
