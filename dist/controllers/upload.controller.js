@@ -18,8 +18,7 @@ const generatePresignedUrl = async (req, res) => {
         Bucket: process.env.AWS_BUCKET_NAME,
         Key: key,
         ContentType: fileType,
-        ACL: 'public-read',
-        Expires: 60,
+        Expires: 120,
     };
     try {
         const uploadUrl = await s3.getSignedUrlPromise('putObject', params);
