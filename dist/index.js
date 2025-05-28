@@ -28,7 +28,9 @@ const allowedOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',
     'https://grabgardenn.com',
+    'https://www.grabgardenn.com',
     'https://dashboard.grabgardenn.com',
+    'https://www.dashboard.grabgardenn.com',
 ];
 app.use((0, cors_1.default)({
     origin: function (origin, callback) {
