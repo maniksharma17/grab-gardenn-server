@@ -14,6 +14,7 @@ import { promoRouter } from './routes/promo.routes';
 import wishlistRouter from './routes/wishlist.routes';
 import reviewRouter from './routes/review.routes';
 import uploadRouter from './routes/upload.routes';
+import { blogRouter } from './routes/blog.routes';
 
 dotenv.config();
 
@@ -55,6 +56,7 @@ app.use('/api/promo-code', promoRouter);
 app.use('/api/wishlist', wishlistRouter);
 app.use('/api/reviews', reviewRouter);
 app.use('/api/upload', uploadRouter);
+app.use('/api/blogs', blogRouter);
 
 // Error handling middleware
 app.use(errorHandler);

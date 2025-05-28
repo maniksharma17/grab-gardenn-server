@@ -81,3 +81,35 @@ export const getOrder = async (req: Request, res: Response) => {
 
   res.json({ order });
 };
+
+export const getOrderById = async (req: Request, res: Response) => {
+  const order = await Order.findById(req.params.id)
+    .populate('user')
+    .populate('items.product');
+
+  if (!order) {
+    return res.status(404).json({ message: 'Order not found' });
+  }
+
+  res.json({ order });
+}
+
+export const updateOrderStatus = async (req: Request, res: Response) => {
+  const { status } = req.body;
+
+  if (!status) {
+    return res.status(400).json({ message: 'Status is required' });
+  }
+
+  const order = await Order.findByIdAndUpdate(
+    req.params.id,
+    { status },
+    { new: true }
+  ).populate('items.product');
+
+  if (!order) {
+    return res.status(404).json({ message: 'Order not found' });
+  }
+
+  res.json({ order });
+}

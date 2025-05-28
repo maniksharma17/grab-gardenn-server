@@ -4,4 +4,5 @@ export const categorySchema = z.object({
   name: z.string().min(2),
   description: z.string().min(10),
   image: (z.string().url()).optional(),
+  products: z.array(z.string()).optional(),
 });

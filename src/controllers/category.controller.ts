@@ -23,8 +23,6 @@ export const getCategoryByName = async (req: Request, res: Response) => {
   res.json({ category });
 };
 
-
-
 export const createCategory = async (req: Request, res: Response) => {
   try {
     const categoryData = req.body;

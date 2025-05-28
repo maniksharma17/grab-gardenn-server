@@ -416,7 +416,7 @@ export const createShiprocketOrder = async (req: Request, res: Response) => {
     );
     console.log("ORDER GENERATED:", response.data);
 
-    order.shippingOrderId = response.data.order_id;
+    order.shiprocketOrderId = response.data.order_id;
     await order.save();
 
     try{
@@ -1057,7 +1057,7 @@ export const createShipmozoOrder = async (req: Request, res: Response) => {
 
     const shippingId = response.data.data.order_id;
 
-    order.shippingOrderId = response.data.data.order_id;
+    order.shiprocketOrderId = response.data.data.order_id;
     await order.save();
 
     try{
