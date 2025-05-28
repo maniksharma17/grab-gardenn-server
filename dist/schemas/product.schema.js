@@ -4,7 +4,7 @@ exports.productSchema = void 0;
 const zod_1 = require("zod");
 exports.productSchema = zod_1.z.object({
     name: zod_1.z.string().min(2),
-    hindiName: zod_1.z.string().min(2).optional(),
+    hindiName: zod_1.z.string().optional(),
     description: zod_1.z.string().min(10),
     price: zod_1.z.array(zod_1.z.number().positive()),
     cutoffPrice: zod_1.z.array(zod_1.z.number().positive()),
@@ -21,7 +21,7 @@ exports.productSchema = zod_1.z.object({
     category: zod_1.z.string(),
     benefits: zod_1.z.array(zod_1.z.string()),
     ingredients: zod_1.z.array(zod_1.z.string()),
-    storage: zod_1.z.string().min(5),
+    storage: zod_1.z.string().optional(),
     instructions: zod_1.z.array(zod_1.z.string()),
     stock: zod_1.z.number(),
 });
