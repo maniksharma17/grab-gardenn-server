@@ -8,6 +8,7 @@ exports.PromoCode = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const promoCodeSchema = new mongoose_1.default.Schema({
     code: { type: String, required: true, unique: true, uppercase: true },
+    description: { type: String, default: '' },
     type: { type: String, enum: ['percent', 'flat'], required: true },
     value: { type: Number, required: true },
     active: { type: Boolean, default: true },

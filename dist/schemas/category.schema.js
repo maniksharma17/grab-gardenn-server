@@ -6,4 +6,5 @@ exports.categorySchema = zod_1.z.object({
     name: zod_1.z.string().min(2),
     description: zod_1.z.string().min(10),
     image: (zod_1.z.string().url()).optional(),
+    products: zod_1.z.array(zod_1.z.string()).optional(),
 });

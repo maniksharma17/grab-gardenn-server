@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getOrder = exports.getOrders = exports.getAllOrders = exports.createOrder = void 0;
+exports.updateOrderStatus = exports.getOrderById = exports.getOrder = exports.getOrders = exports.getAllOrders = exports.createOrder = void 0;
 const order_model_1 = require("../models/order.model");
 const cart_model_1 = require("../models/cart.model");
 const product_model_1 = require("../models/product.model");
@@ -70,3 +70,25 @@ const getOrder = async (req, res) => {
     res.json({ order });
 };
 exports.getOrder = getOrder;
+const getOrderById = async (req, res) => {
+    const order = await order_model_1.Order.findById(req.params.id)
+        .populate('user')
+        .populate('items.product');
+    if (!order) {
+        return res.status(404).json({ message: 'Order not found' });
+    }
+    res.json({ order });
+};
+exports.getOrderById = getOrderById;
+const updateOrderStatus = async (req, res) => {
+    const { status } = req.body;
+    if (!status) {
+        return res.status(400).json({ message: 'Status is required' });
+    }
+    const order = await order_model_1.Order.findByIdAndUpdate(req.params.id, { status }, { new: true }).populate('items.product');
+    if (!order) {
+        return res.status(404).json({ message: 'Order not found' });
+    }
+    res.json({ order });
+};
+exports.updateOrderStatus = updateOrderStatus;

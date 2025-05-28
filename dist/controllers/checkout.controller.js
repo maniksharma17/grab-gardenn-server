@@ -340,7 +340,7 @@ const createShiprocketOrder = async (req, res) => {
             },
         });
         console.log("ORDER GENERATED:", response.data);
-        order.shippingOrderId = response.data.order_id;
+        order.shiprocketOrderId = response.data.order_id;
         await order.save();
         try {
             const awbFetchCall = await axios_1.default.post(`${SHIPROCKET_API_BASE}/courier/assign/awb`, {
@@ -842,7 +842,7 @@ const createShipmozoOrder = async (req, res) => {
         });
         console.log("ORDER GENERATED:", response.data);
         const shippingId = response.data.data.order_id;
-        order.shippingOrderId = response.data.data.order_id;
+        order.shiprocketOrderId = response.data.data.order_id;
         await order.save();
         try {
             const awbFetchCall = await axios_1.default.post(`${SHIPMOZO_API_BASE}/assign-courier`, {

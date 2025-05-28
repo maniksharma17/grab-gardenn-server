@@ -19,6 +19,7 @@ const promo_routes_1 = require("./routes/promo.routes");
 const wishlist_routes_1 = __importDefault(require("./routes/wishlist.routes"));
 const review_routes_1 = __importDefault(require("./routes/review.routes"));
 const upload_routes_1 = __importDefault(require("./routes/upload.routes"));
+const blog_routes_1 = require("./routes/blog.routes");
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 const PORT = process.env.PORT || 3000;
@@ -56,6 +57,7 @@ app.use('/api/promo-code', promo_routes_1.promoRouter);
 app.use('/api/wishlist', wishlist_routes_1.default);
 app.use('/api/reviews', review_routes_1.default);
 app.use('/api/upload', upload_routes_1.default);
+app.use('/api/blogs', blog_routes_1.blogRouter);
 // Error handling middleware
 app.use(error_middleware_1.errorHandler);
 // Database connection

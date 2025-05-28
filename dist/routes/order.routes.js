@@ -8,4 +8,5 @@ exports.orderRouter = (0, express_1.Router)();
 exports.orderRouter.post('/:id', auth_middleware_1.auth, order_controller_1.createOrder);
 exports.orderRouter.get('/:id', auth_middleware_1.auth, order_controller_1.getOrders);
 exports.orderRouter.get('/', order_controller_1.getAllOrders);
-exports.orderRouter.get('/:userId/:id', auth_middleware_1.auth, order_controller_1.getOrder);
+exports.orderRouter.get('/dashboard/:id', order_controller_1.getOrderById);
+exports.orderRouter.put('/update-status/:id', order_controller_1.updateOrderStatus);
