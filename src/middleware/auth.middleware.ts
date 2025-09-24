@@ -44,8 +44,8 @@ export const optionalAuth = async (req: Request, _res: Response, next: NextFunct
   const token = req.headers.authorization?.split(" ")[1];
   if (token) {
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: string };
-      req.user = await User.findById(decoded.id);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string };
+      req.user = await User.findById(decoded.userId);
     } catch {
       // ignore errors, continue as guest
     }
