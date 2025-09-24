@@ -39,3 +39,16 @@ export const auth = async (req: AuthRequest, res: Response, next: NextFunction) 
     res.status(401).json({ message: "Invalid or expired token", success: false });
   }
 };
+
+export const optionalAuth = async (req: Request, _res: Response, next: NextFunction) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: string };
+      req.user = await User.findById(decoded.id);
+    } catch {
+      // ignore errors, continue as guest
+    }
+  }
+  next();
+};

@@ -1,5 +1,4 @@
-import mongoose from 'mongoose';
-import { Document, Types } from 'mongoose';
+import mongoose, { Document, Types } from 'mongoose';
 import { ProductDocument } from './product.model';
 
 export interface CartItem {
@@ -18,57 +17,37 @@ export interface CartItem {
 }
 
 export interface CartDocument extends Document {
-  user: Types.ObjectId; // Or UserDocument if populated
+  user?: Types.ObjectId; // optional for guests
+  guestId?: string; // unique ID for guest
   items: CartItem[];
   updatedAt: Date;
 }
 
 const cartItemSchema = new mongoose.Schema({
-  product: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product',
-    required: true,
-  },
-  quantity: {
-    type: Number,
-    required: true,
-    min: 1,
-  },
-  price: {
-    type: Number,
-    required: true
-  },
+  product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
+  quantity: { type: Number, required: true, min: 1 },
+  price: { type: Number, required: true },
   variant: {
-    display: {
-      type: String,
-      required: true
-    },
-    value: {
-      type: Number,
-      required: true
-    }
+    display: { type: String, required: true },
+    value: { type: Number, required: true },
   },
   dimensions: {
-    length: {
-      type: Number,
-      required: true
-    },
-    breadth: {
-      type: Number,
-      required: true
-    },
-    height: {
-      type: Number,
-      required: true
-    }
-  }
+    length: { type: Number, required: true },
+    breadth: { type: Number, required: true },
+    height: { type: Number, required: true },
+  },
 });
 
 const cartSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
+    required: false, // make optional
+  },
+  guestId: {
+    type: String,
+    required: false, // for guest carts
+    index: true,     // quick lookup by guestId
   },
   items: [cartItemSchema],
   updatedAt: {
@@ -77,4 +56,4 @@ const cartSchema = new mongoose.Schema({
   },
 });
 
-export const Cart = mongoose.model('Cart', cartSchema);
+export const Cart = mongoose.model<CartDocument>('Cart', cartSchema);

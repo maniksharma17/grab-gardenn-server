@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { userSchema, loginSchema } from '../schemas/user.schema';
 import { User } from '../models/user.model';
+import { CartService } from "../services/cart.service";
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -23,16 +24,16 @@ export const register = async (req: Request, res: Response) => {
     if (existingUser) {
       let message = '';
     
-    if (existingUser.email === req.body.email) {
-      message = 'Account already registered with this email.';
-    } else if (existingUser.phone === req.body.phone) {
-      message = 'Account already registered with this phone number.';
-    } else {
-      message = 'Account already exists.'; // fallback
-    }
+      if (existingUser.email === req.body.email) {
+        message = 'Account already registered with this email.';
+      } else if (existingUser.phone === req.body.phone) {
+        message = 'Account already registered with this phone number.';
+      } else {
+        message = 'Account already exists.'; // fallback
+      }
 
-    res.json({error: true, message})
-  }
+      res.json({error: true, message})
+    }
 
     const user = await User.create(req.body);
     
@@ -46,6 +47,14 @@ export const register = async (req: Request, res: Response) => {
       secure: true,
       sameSite: 'none',
     });
+
+    // Merge guest cart into user cart (do not break register on merge failure)
+    try {
+      await CartService.mergeGuestCart(req, user._id);
+    } catch (mergeErr) {
+      console.error('Failed to merge guest cart after register:', mergeErr);
+      // intentionally not changing the response flow
+    }
 
     res.status(201).json({ user: { ...user.toObject(), password: undefined }, token });
   } catch (error) {
@@ -83,6 +92,14 @@ export const login = async (req: Request, res: Response) => {
       secure: true,
       sameSite: 'none',
     });
+
+    // Merge guest cart into user cart (do not block login if merge fails)
+    try {
+      await CartService.mergeGuestCart(req, user._id);
+    } catch (mergeErr) {
+      console.error('Failed to merge guest cart after login:', mergeErr);
+      // intentionally not changing the response flow
+    }
 
     res.json({ user: { ...user.toObject(), password: undefined }, token });
   } catch (error) {
