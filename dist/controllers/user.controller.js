@@ -8,6 +8,7 @@ const bcryptjs_1 = __importDefault(require("bcryptjs"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const user_schema_1 = require("../schemas/user.schema");
 const user_model_1 = require("../models/user.model");
+const cart_service_1 = require("../services/cart.service");
 const register = async (req, res) => {
     try {
         const isValid = user_schema_1.userSchema.safeParse(req.body);
@@ -41,6 +42,14 @@ const register = async (req, res) => {
             secure: true,
             sameSite: 'none',
         });
+        // Merge guest cart into user cart (do not break register on merge failure)
+        try {
+            await cart_service_1.CartService.mergeGuestCart(req, user._id);
+        }
+        catch (mergeErr) {
+            console.error('Failed to merge guest cart after register:', mergeErr);
+            // intentionally not changing the response flow
+        }
         res.status(201).json({ user: { ...user.toObject(), password: undefined }, token });
     }
     catch (error) {
@@ -69,6 +78,14 @@ const login = async (req, res) => {
             secure: true,
             sameSite: 'none',
         });
+        // Merge guest cart into user cart (do not block login if merge fails)
+        try {
+            await cart_service_1.CartService.mergeGuestCart(req, user._id);
+        }
+        catch (mergeErr) {
+            console.error('Failed to merge guest cart after login:', mergeErr);
+            // intentionally not changing the response flow
+        }
         res.json({ user: { ...user.toObject(), password: undefined }, token });
     }
     catch (error) {
