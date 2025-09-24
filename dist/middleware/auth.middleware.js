@@ -32,7 +32,7 @@ const optionalAuth = async (req, _res, next) => {
     if (token) {
         try {
             const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_SECRET);
-            req.user = await user_model_1.User.findById(decoded.id);
+            req.user = await user_model_1.User.findById(decoded.userId);
         }
         catch {
             // ignore errors, continue as guest
