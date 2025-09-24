@@ -114,8 +114,16 @@ const oAuthLogin = async (req, res) => {
         await user.save();
     }
     const token = jsonwebtoken_1.default.sign({ userId: user._id }, process.env.JWT_SECRET || 'secret');
+    // Merge guest cart into user cart (don’t block login if merge fails)
+    try {
+        await cart_service_1.CartService.mergeGuestCart(req, user._id);
+    }
+    catch (mergeErr) {
+        console.error('Failed to merge guest cart after oAuthLogin:', mergeErr);
+        // allow login to proceed even if merge fails
+    }
     res.json({
-        user,
+        user: { ...user.toObject(), password: undefined },
         token,
     });
 };
