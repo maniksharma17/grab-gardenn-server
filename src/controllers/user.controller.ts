@@ -117,7 +117,7 @@ export const logout = (req: Request, res: Response) => {
   res.json({ message: 'Logged out successfully' });
 };
 
-export const oAuthLogin =  async (req: Request, res: Response) => {
+export const oAuthLogin = async (req: Request, res: Response) => {
   const { email, name } = req.body;
   let user = await User.findOne({ email });
 
@@ -134,12 +134,19 @@ export const oAuthLogin =  async (req: Request, res: Response) => {
     process.env.JWT_SECRET || 'secret',
   );
 
+  // Merge guest cart into user cart (don’t block login if merge fails)
+  try {
+    await CartService.mergeGuestCart(req, user._id);
+  } catch (mergeErr) {
+    console.error('Failed to merge guest cart after oAuthLogin:', mergeErr);
+    // allow login to proceed even if merge fails
+  }
+
   res.json({
-    user,
+    user: { ...user.toObject(), password: undefined },
     token,
   });
 };
-
 
 
 export const completeProfile = async (req: Request, res: Response) => {
