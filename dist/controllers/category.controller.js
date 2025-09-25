@@ -17,7 +17,7 @@ const getCategory = async (req, res) => {
 };
 exports.getCategory = getCategory;
 const getCategoryByName = async (req, res) => {
-    const category = await category_model_1.Category.find({ name: req.params.name }).populate('products');
+    const category = await category_model_1.Category.find({ name: decodeURIComponent(req.params.name) }).populate('products');
     if (!category) {
         return res.status(404).json({ message: 'Category not found' });
     }
