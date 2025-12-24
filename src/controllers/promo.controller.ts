@@ -59,18 +59,18 @@ export const getPromoCodeById = async (req: Request, res: Response) => {
 /* -------------------------------------------------------------------------- */
 
 export const applyPromoCode = async (req: Request, res: Response) => {
-  const { code, total, userId } = req.body;
+  const { code, total, userId, itemCount } = req.body;
 
   if (!code || typeof total !== "number" || !userId) {
     return res.status(400).json({
-      error: "Promo code, userId and order total are required"
+      error: "Promo code, userId and order total are required",
     });
   }
 
   try {
     const promo = await PromoCode.findOne({
       code: code.toUpperCase(),
-      active: true
+      active: true,
     });
 
     if (!promo) {
@@ -88,14 +88,14 @@ export const applyPromoCode = async (req: Request, res: Response) => {
     /* -------------------------- MIN ORDER CHECK ----------------------------- */
     if (promo.minimumOrder && total < promo.minimumOrder) {
       return res.status(400).json({
-        error: `Minimum order value of ₹${promo.minimumOrder} required`
+        error: `Minimum order value of ₹${promo.minimumOrder} required`,
       });
     }
 
     /* --------------------------- USAGE LIMIT -------------------------------- */
     if (promo.maxUses && promo.usedCount >= promo.maxUses) {
       return res.status(400).json({
-        error: "Promo code usage limit reached"
+        error: "Promo code usage limit reached",
       });
     }
 
@@ -103,12 +103,12 @@ export const applyPromoCode = async (req: Request, res: Response) => {
     if (promo.oneTimeUsePerUser) {
       const alreadyUsed = await Order.findOne({
         user: userId,
-        promoCode: promo.code
+        promoCode: promo.code,
       });
 
       if (alreadyUsed) {
         return res.status(400).json({
-          error: "You have already used this promo code"
+          error: "You have already used this promo code",
         });
       }
     }
@@ -116,23 +116,61 @@ export const applyPromoCode = async (req: Request, res: Response) => {
     /* -------------------------- DISCOUNT LOGIC ------------------------------ */
     let discountAmount = 0;
 
+    // 🔹 PERCENT DISCOUNT
     if (promo.promoMode === "PERCENT") {
       discountAmount = Math.floor((total * promo.value!) / 100);
-    } else {
+
+      // Max discount cap
+      if (promo.maxDiscount) {
+        discountAmount = Math.min(discountAmount, promo.maxDiscount);
+      }
+    }
+
+    // 🔹 FLAT DISCOUNT
+    else if (promo.promoMode === "FLAT") {
       discountAmount = Math.min(promo.value!, total);
+    }
+
+    // 🔹 BUNDLE DISCOUNT (Buy N for ₹X)
+    else if (promo.promoMode === "BUNDLE") {
+      if (!itemCount) {
+        return res.status(400).json({
+          error: "Item count is required for this promo",
+        });
+      }
+
+      if (!promo.bundle) {
+        return res.status(400).json({
+          error: "Bundle configuration is missing",
+        });
+      }
+
+      if (promo.bundle?.minItems && itemCount < promo.bundle?.minItems) {
+        return res.status(400).json({
+          error: `Add at least ${promo.bundle.minItems} items to apply this promo`,
+        });
+      }
+
+      if (promo.bundle?.bundlePrice && total <= promo.bundle.bundlePrice) {
+        return res.status(400).json({
+          error: "Cart total already lower than bundle price",
+        });
+      }
+
+      discountAmount = total - promo.bundle.bundlePrice!;
     }
 
     return res.status(200).json({
       code: promo.code,
       promoCodeId: promo._id,
       discountAmount,
-      finalAmount: total - discountAmount,
-      message: `Promo applied successfully. You saved ₹${discountAmount}`
+      finalAmount: Math.max(total - discountAmount, 0),
+      message: `Promo applied successfully. You saved ₹${discountAmount}`,
     });
   } catch (error) {
     return res.status(500).json({
       message: "Failed to apply promo code",
-      error
+      error,
     });
   }
 };
