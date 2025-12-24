@@ -12,11 +12,13 @@ import { Cart } from "../models/cart.model";
  */
 export const getPromos = async (req: Request, res: Response) => {
   try {
-    const promos = await PromoCode.find({ active: true }).sort({ createdAt: -1 });
+    const promos = await PromoCode.find({ active: true }).sort({
+      createdAt: -1,
+    });
     return res.status(200).json(promos);
   } catch (error) {
     return res.status(500).json({
-      message: "Failed to fetch promo codes"
+      message: "Failed to fetch promo codes",
     });
   }
 };
@@ -31,7 +33,7 @@ export const getPromosDashboard = async (req: Request, res: Response) => {
   } catch (error) {
     return res.status(500).json({
       message: "Failed to fetch promo codes",
-      error
+      error,
     });
   }
 };
@@ -50,7 +52,7 @@ export const getPromoCodeById = async (req: Request, res: Response) => {
     return res.status(200).json(promo);
   } catch (error) {
     return res.status(500).json({
-      message: "Failed to fetch promo code"
+      message: "Failed to fetch promo code",
     });
   }
 };
@@ -133,45 +135,60 @@ export const applyPromoCode = async (req: Request, res: Response) => {
       if (promo.maxDiscount) {
         discountAmount = Math.min(discountAmount, promo.maxDiscount);
       }
-    }
+    } else if (promo.promoMode === "FLAT") {
 
     /* =========================== FLAT ============================ */
-    else if (promo.promoMode === "FLAT") {
       discountAmount = Math.min(promo.value!, total);
-    }
+    } else if (promo.promoMode === "BUNDLE") {
 
     /* =========================== BUNDLE ========================== */
-    else if (promo.promoMode === "BUNDLE") {
       if (!promo.bundle || !promo.eligibleProducts?.length) {
-        return res.status(400).json({ error: "Invalid bundle configuration" });
+        return res.status(400).json({
+          error: "Invalid bundle configuration",
+        });
       }
 
-      let eligibleItemCount = 0;
-      let eligibleSubtotal = 0;
+      const eligibleUnitPrices: number[] = [];
 
+      // 1️⃣ Collect unit prices of eligible products
       for (const item of cart.items) {
-        if (
-          promo.eligibleProducts.some(
-            (id) => id.toString() === (item.product._id as any).toString()
-          )
-        ) {
-          eligibleItemCount += item.quantity;
-          eligibleSubtotal += item.price * item.quantity;
+        const isEligible = promo.eligibleProducts.some(
+          (id) => id.toString() === (item.product._id as any).toString()
+        );
+
+        if (isEligible) {
+          // Push price once per quantity
+          for (let i = 0; i < item.quantity; i++) {
+            eligibleUnitPrices.push(item.price);
+          }
         }
       }
 
-      if (promo.bundle.minItems && eligibleItemCount < promo.bundle.minItems) {
+      // 2️⃣ Check eligibility count
+      if (
+        promo.bundle.minItems &&
+        eligibleUnitPrices.length < promo.bundle.minItems
+      ) {
         return res.status(400).json({
           error: `Add ${
-            promo.bundle.minItems - eligibleItemCount
+            promo.bundle.minItems - eligibleUnitPrices.length
           } more eligible products to apply this offer`,
         });
       }
 
-      discountAmount = Math.max(
-        eligibleSubtotal - promo.bundle.bundlePrice!,
+      // 3️⃣ Sort prices ascending (cheapest first)
+      eligibleUnitPrices.sort((a, b) => a - b);
+
+      // 4️⃣ Take EXACT number of items for bundle
+      const bundledItems = eligibleUnitPrices.slice(0, promo.bundle.minItems!);
+
+      const bundledSubtotal = bundledItems.reduce(
+        (sum, price) => sum + price,
         0
       );
+
+      // 5️⃣ Calculate discount
+      discountAmount = Math.max(bundledSubtotal - promo.bundle.bundlePrice!, 0);
     }
 
     return res.status(200).json({
@@ -188,7 +205,6 @@ export const applyPromoCode = async (req: Request, res: Response) => {
     });
   }
 };
-
 
 /* -------------------------------------------------------------------------- */
 /*                            CREATE PROMO CODE                                */
@@ -301,7 +317,6 @@ export const createPromoCode = async (req: Request, res: Response) => {
     });
   }
 };
-
 
 export const updatePromoCode = async (req: Request, res: Response) => {
   const {
@@ -429,17 +444,17 @@ export const deletePromoCode = async (req: Request, res: Response) => {
 
     if (!promo) {
       return res.status(404).json({
-        message: "Promo code not found"
+        message: "Promo code not found",
       });
     }
 
     return res.status(200).json({
-      message: "Promo code deleted successfully"
+      message: "Promo code deleted successfully",
     });
   } catch (error) {
     return res.status(500).json({
       message: "Failed to delete promo code",
-      error
+      error,
     });
   }
 };
@@ -454,7 +469,7 @@ export const togglePromoCode = async (req: Request, res: Response) => {
 
     if (!promo) {
       return res.status(404).json({
-        message: "Promo code not found"
+        message: "Promo code not found",
       });
     }
 
@@ -463,12 +478,14 @@ export const togglePromoCode = async (req: Request, res: Response) => {
 
     return res.status(200).json({
       success: true,
-      message: `Promo code ${promo.active ? "activated" : "deactivated"} successfully`
+      message: `Promo code ${
+        promo.active ? "activated" : "deactivated"
+      } successfully`,
     });
   } catch (error) {
     return res.status(500).json({
       message: "Failed to toggle promo code",
-      error
+      error,
     });
   }
 };

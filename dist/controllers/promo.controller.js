@@ -12,12 +12,14 @@ const cart_model_1 = require("../models/cart.model");
  */
 const getPromos = async (req, res) => {
     try {
-        const promos = await promo_model_1.PromoCode.find({ active: true }).sort({ createdAt: -1 });
+        const promos = await promo_model_1.PromoCode.find({ active: true }).sort({
+            createdAt: -1,
+        });
         return res.status(200).json(promos);
     }
     catch (error) {
         return res.status(500).json({
-            message: "Failed to fetch promo codes"
+            message: "Failed to fetch promo codes",
         });
     }
 };
@@ -33,7 +35,7 @@ const getPromosDashboard = async (req, res) => {
     catch (error) {
         return res.status(500).json({
             message: "Failed to fetch promo codes",
-            error
+            error,
         });
     }
 };
@@ -51,7 +53,7 @@ const getPromoCodeById = async (req, res) => {
     }
     catch (error) {
         return res.status(500).json({
-            message: "Failed to fetch promo code"
+            message: "Failed to fetch promo code",
         });
     }
 };
@@ -118,29 +120,42 @@ const applyPromoCode = async (req, res) => {
                 discountAmount = Math.min(discountAmount, promo.maxDiscount);
             }
         }
-        /* =========================== FLAT ============================ */
         else if (promo.promoMode === "FLAT") {
+            /* =========================== FLAT ============================ */
             discountAmount = Math.min(promo.value, total);
         }
-        /* =========================== BUNDLE ========================== */
         else if (promo.promoMode === "BUNDLE") {
+            /* =========================== BUNDLE ========================== */
             if (!promo.bundle || !promo.eligibleProducts?.length) {
-                return res.status(400).json({ error: "Invalid bundle configuration" });
-            }
-            let eligibleItemCount = 0;
-            let eligibleSubtotal = 0;
-            for (const item of cart.items) {
-                if (promo.eligibleProducts.some((id) => id.toString() === item.product._id.toString())) {
-                    eligibleItemCount += item.quantity;
-                    eligibleSubtotal += item.price * item.quantity;
-                }
-            }
-            if (promo.bundle.minItems && eligibleItemCount < promo.bundle.minItems) {
                 return res.status(400).json({
-                    error: `Add ${promo.bundle.minItems - eligibleItemCount} more eligible products to apply this offer`,
+                    error: "Invalid bundle configuration",
                 });
             }
-            discountAmount = Math.max(eligibleSubtotal - promo.bundle.bundlePrice, 0);
+            const eligibleUnitPrices = [];
+            // 1️⃣ Collect unit prices of eligible products
+            for (const item of cart.items) {
+                const isEligible = promo.eligibleProducts.some((id) => id.toString() === item.product._id.toString());
+                if (isEligible) {
+                    // Push price once per quantity
+                    for (let i = 0; i < item.quantity; i++) {
+                        eligibleUnitPrices.push(item.price);
+                    }
+                }
+            }
+            // 2️⃣ Check eligibility count
+            if (promo.bundle.minItems &&
+                eligibleUnitPrices.length < promo.bundle.minItems) {
+                return res.status(400).json({
+                    error: `Add ${promo.bundle.minItems - eligibleUnitPrices.length} more eligible products to apply this offer`,
+                });
+            }
+            // 3️⃣ Sort prices ascending (cheapest first)
+            eligibleUnitPrices.sort((a, b) => a - b);
+            // 4️⃣ Take EXACT number of items for bundle
+            const bundledItems = eligibleUnitPrices.slice(0, promo.bundle.minItems);
+            const bundledSubtotal = bundledItems.reduce((sum, price) => sum + price, 0);
+            // 5️⃣ Calculate discount
+            discountAmount = Math.max(bundledSubtotal - promo.bundle.bundlePrice, 0);
         }
         return res.status(200).json({
             code: promo.code,
@@ -334,17 +349,17 @@ const deletePromoCode = async (req, res) => {
         const promo = await promo_model_1.PromoCode.findByIdAndDelete(req.params.id);
         if (!promo) {
             return res.status(404).json({
-                message: "Promo code not found"
+                message: "Promo code not found",
             });
         }
         return res.status(200).json({
-            message: "Promo code deleted successfully"
+            message: "Promo code deleted successfully",
         });
     }
     catch (error) {
         return res.status(500).json({
             message: "Failed to delete promo code",
-            error
+            error,
         });
     }
 };
@@ -357,20 +372,20 @@ const togglePromoCode = async (req, res) => {
         const promo = await promo_model_1.PromoCode.findById(req.params.id);
         if (!promo) {
             return res.status(404).json({
-                message: "Promo code not found"
+                message: "Promo code not found",
             });
         }
         promo.active = !promo.active;
         await promo.save();
         return res.status(200).json({
             success: true,
-            message: `Promo code ${promo.active ? "activated" : "deactivated"} successfully`
+            message: `Promo code ${promo.active ? "activated" : "deactivated"} successfully`,
         });
     }
     catch (error) {
         return res.status(500).json({
             message: "Failed to toggle promo code",
-            error
+            error,
         });
     }
 };
