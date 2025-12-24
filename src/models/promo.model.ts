@@ -8,7 +8,7 @@ const promoCodeSchema = new mongoose.Schema({
   promoMode: {
     type: String,
     enum: ["PERCENT", "FLAT", "BUNDLE"],
-    required: true
+    required: true,
   },
 
   value: { type: Number }, // % OR flat OR bundle price
@@ -16,18 +16,23 @@ const promoCodeSchema = new mongoose.Schema({
   maxDiscount: { type: Number }, // cap for percent promos
 
   bundle: {
-    minItems: { type: Number },     // e.g. 4
-    bundlePrice: { type: Number }   // e.g. 700
+    minItems: { type: Number }, // e.g. 4
+    bundlePrice: { type: Number }, // e.g. 700
   },
+
+  eligibleProducts: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+    },
+  ],
 
   active: { type: Boolean, default: true },
   expiryDate: { type: Date, required: true },
   minimumOrder: { type: Number, default: 0 },
   maxUses: { type: Number },
   usedCount: { type: Number, default: 0 },
-  oneTimeUsePerUser: { type: Boolean }
+  oneTimeUsePerUser: { type: Boolean },
 });
 
-
-
-export const PromoCode = mongoose.model('PromoCode', promoCodeSchema);
+export const PromoCode = mongoose.model("PromoCode", promoCodeSchema);

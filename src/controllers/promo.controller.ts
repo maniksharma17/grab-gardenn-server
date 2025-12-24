@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { PromoCode } from "../models/promo.model";
 import { Order } from "../models/order.model";
+import { Cart } from "../models/cart.model";
 
 /* -------------------------------------------------------------------------- */
 /*                               GET PROMOS                                   */
@@ -59,11 +60,11 @@ export const getPromoCodeById = async (req: Request, res: Response) => {
 /* -------------------------------------------------------------------------- */
 
 export const applyPromoCode = async (req: Request, res: Response) => {
-  const { code, total, userId, itemCount } = req.body;
+  const { code, userId } = req.body;
 
-  if (!code || typeof total !== "number" || !userId) {
+  if (!code || !userId) {
     return res.status(400).json({
-      error: "Promo code, userId and order total are required",
+      error: "Promo code and userId are required",
     });
   }
 
@@ -81,9 +82,20 @@ export const applyPromoCode = async (req: Request, res: Response) => {
     if (promo.expiryDate < new Date()) {
       promo.active = false;
       await promo.save();
-
       return res.status(400).json({ error: "Promo code has expired" });
     }
+
+    /* ----------------------------- FETCH CART ----------------------------- */
+    const cart = await Cart.findOne({ user: userId }).populate("items.product");
+
+    if (!cart || cart.items.length === 0) {
+      return res.status(400).json({ error: "Cart is empty" });
+    }
+
+    const total = cart.items.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
 
     /* -------------------------- MIN ORDER CHECK ----------------------------- */
     if (promo.minimumOrder && total < promo.minimumOrder) {
@@ -113,51 +125,53 @@ export const applyPromoCode = async (req: Request, res: Response) => {
       }
     }
 
-    /* -------------------------- DISCOUNT LOGIC ------------------------------ */
     let discountAmount = 0;
 
-    // 🔹 PERCENT DISCOUNT
+    /* ========================== PERCENT ========================== */
     if (promo.promoMode === "PERCENT") {
       discountAmount = Math.floor((total * promo.value!) / 100);
-
-      // Max discount cap
       if (promo.maxDiscount) {
         discountAmount = Math.min(discountAmount, promo.maxDiscount);
       }
     }
 
-    // 🔹 FLAT DISCOUNT
+    /* =========================== FLAT ============================ */
     else if (promo.promoMode === "FLAT") {
       discountAmount = Math.min(promo.value!, total);
     }
 
-    // 🔹 BUNDLE DISCOUNT (Buy N for ₹X)
+    /* =========================== BUNDLE ========================== */
     else if (promo.promoMode === "BUNDLE") {
-      if (!itemCount) {
+      if (!promo.bundle || !promo.eligibleProducts?.length) {
+        return res.status(400).json({ error: "Invalid bundle configuration" });
+      }
+
+      let eligibleItemCount = 0;
+      let eligibleSubtotal = 0;
+
+      for (const item of cart.items) {
+        if (
+          promo.eligibleProducts.some(
+            (id) => id.toString() === (item.product._id as any).toString()
+          )
+        ) {
+          eligibleItemCount += item.quantity;
+          eligibleSubtotal += item.price * item.quantity;
+        }
+      }
+
+      if (promo.bundle.minItems && eligibleItemCount < promo.bundle.minItems) {
         return res.status(400).json({
-          error: "Item count is required for this promo",
+          error: `Add ${
+            promo.bundle.minItems - eligibleItemCount
+          } more eligible products to apply this offer`,
         });
       }
 
-      if (!promo.bundle) {
-        return res.status(400).json({
-          error: "Offer not applicable",
-        });
-      }
-
-      if (promo.bundle?.minItems && itemCount !== promo.bundle?.minItems) {
-        return res.status(400).json({
-          error: `Number of cart items should be ${promo.bundle.minItems} to apply this offer`,
-        });
-      }
-
-      if (promo.bundle?.bundlePrice && total <= promo.bundle.bundlePrice) {
-        return res.status(400).json({
-          error: "Cart total already lower than bundle price",
-        });
-      }
-
-      discountAmount = total - promo.bundle.bundlePrice!;
+      discountAmount = Math.max(
+        eligibleSubtotal - promo.bundle.bundlePrice!,
+        0
+      );
     }
 
     return res.status(200).json({
@@ -174,6 +188,7 @@ export const applyPromoCode = async (req: Request, res: Response) => {
     });
   }
 };
+
 
 /* -------------------------------------------------------------------------- */
 /*                            CREATE PROMO CODE                                */
