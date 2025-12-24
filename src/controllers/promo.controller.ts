@@ -145,17 +145,44 @@ export const createPromoCode = async (req: Request, res: Response) => {
   const {
     code,
     description,
+    promoMode,
     value,
-    type,
+    maxDiscount,
+    bundle,
     expiryDate,
     minimumOrder,
     maxUses,
-    oneTimeUsePerUser
+    oneTimeUsePerUser,
+    active = true
   } = req.body;
 
-  if (!code || !value || !type || !expiryDate) {
+  if (!code || !promoMode || !expiryDate) {
     return res.status(400).json({
-      error: "Code, value, type and expiry date are required"
+      error: "Code, promoMode and expiryDate are required"
+    });
+  }
+
+  // Mode-specific validation
+  if (promoMode === "PERCENT" && (value == null || value <= 0)) {
+    return res.status(400).json({
+      error: "Percentage promo requires a valid value"
+    });
+  }
+
+  if (promoMode === "FLAT" && (value == null || value <= 0)) {
+    return res.status(400).json({
+      error: "Flat promo requires a valid value"
+    });
+  }
+
+  if (
+    promoMode === "BUNDLE" &&
+    (!bundle ||
+      bundle.minItems == null ||
+      bundle.bundlePrice == null)
+  ) {
+    return res.status(400).json({
+      error: "Bundle promo requires minItems and bundlePrice"
     });
   }
 
@@ -173,13 +200,15 @@ export const createPromoCode = async (req: Request, res: Response) => {
     const promo = new PromoCode({
       code: code.toUpperCase(),
       description,
-      value,
-      type,
+      promoMode,
+      value: promoMode !== "BUNDLE" ? value : undefined,
+      maxDiscount: promoMode === "PERCENT" ? maxDiscount : undefined,
+      bundle: promoMode === "BUNDLE" ? bundle : undefined,
       expiryDate,
       minimumOrder,
       maxUses,
       oneTimeUsePerUser,
-      active: true
+      active
     });
 
     await promo.save();
@@ -199,19 +228,45 @@ export const createPromoCode = async (req: Request, res: Response) => {
 
 export const updatePromoCode = async (req: Request, res: Response) => {
   const {
-    code,
     description,
+    promoMode,
     value,
-    type,
+    maxDiscount,
+    bundle,
     expiryDate,
     minimumOrder,
     maxUses,
-    oneTimeUsePerUser
+    oneTimeUsePerUser,
+    active
   } = req.body;
 
-  if (!code || !value || !type || !expiryDate) {
+  if (!promoMode || !expiryDate) {
     return res.status(400).json({
-      error: "Code, value, type and expiry date are required"
+      error: "promoMode and expiryDate are required"
+    });
+  }
+
+  // Mode-specific validation
+  if (promoMode === "PERCENT" && (value == null || value <= 0)) {
+    return res.status(400).json({
+      error: "Percentage promo requires a valid value"
+    });
+  }
+
+  if (promoMode === "FLAT" && (value == null || value <= 0)) {
+    return res.status(400).json({
+      error: "Flat promo requires a valid value"
+    });
+  }
+
+  if (
+    promoMode === "BUNDLE" &&
+    (!bundle ||
+      bundle.minItems == null ||
+      bundle.bundlePrice == null)
+  ) {
+    return res.status(400).json({
+      error: "Bundle promo requires minItems and bundlePrice"
     });
   }
 
@@ -219,14 +274,16 @@ export const updatePromoCode = async (req: Request, res: Response) => {
     const promo = await PromoCode.findByIdAndUpdate(
       req.params.id,
       {
-        code: code.toUpperCase(),
         description,
-        value,
-        type,
+        promoMode,
+        value: promoMode !== "BUNDLE" ? value : undefined,
+        maxDiscount: promoMode === "PERCENT" ? maxDiscount : undefined,
+        bundle: promoMode === "BUNDLE" ? bundle : undefined,
         expiryDate,
         minimumOrder,
         maxUses,
-        oneTimeUsePerUser
+        oneTimeUsePerUser,
+        active
       },
       { new: true }
     );

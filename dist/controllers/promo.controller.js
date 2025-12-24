@@ -131,10 +131,29 @@ exports.applyPromoCode = applyPromoCode;
 /*                            CREATE PROMO CODE                                */
 /* -------------------------------------------------------------------------- */
 const createPromoCode = async (req, res) => {
-    const { code, description, value, type, expiryDate, minimumOrder, maxUses, oneTimeUsePerUser } = req.body;
-    if (!code || !value || !type || !expiryDate) {
+    const { code, description, promoMode, value, maxDiscount, bundle, expiryDate, minimumOrder, maxUses, oneTimeUsePerUser, active = true } = req.body;
+    if (!code || !promoMode || !expiryDate) {
         return res.status(400).json({
-            error: "Code, value, type and expiry date are required"
+            error: "Code, promoMode and expiryDate are required"
+        });
+    }
+    // Mode-specific validation
+    if (promoMode === "PERCENT" && (value == null || value <= 0)) {
+        return res.status(400).json({
+            error: "Percentage promo requires a valid value"
+        });
+    }
+    if (promoMode === "FLAT" && (value == null || value <= 0)) {
+        return res.status(400).json({
+            error: "Flat promo requires a valid value"
+        });
+    }
+    if (promoMode === "BUNDLE" &&
+        (!bundle ||
+            bundle.minItems == null ||
+            bundle.bundlePrice == null)) {
+        return res.status(400).json({
+            error: "Bundle promo requires minItems and bundlePrice"
         });
     }
     try {
@@ -149,13 +168,15 @@ const createPromoCode = async (req, res) => {
         const promo = new promo_model_1.PromoCode({
             code: code.toUpperCase(),
             description,
-            value,
-            type,
+            promoMode,
+            value: promoMode !== "BUNDLE" ? value : undefined,
+            maxDiscount: promoMode === "PERCENT" ? maxDiscount : undefined,
+            bundle: promoMode === "BUNDLE" ? bundle : undefined,
             expiryDate,
             minimumOrder,
             maxUses,
             oneTimeUsePerUser,
-            active: true
+            active
         });
         await promo.save();
         return res.status(201).json(promo);
@@ -172,22 +193,43 @@ exports.createPromoCode = createPromoCode;
 /*                            UPDATE PROMO CODE                                */
 /* -------------------------------------------------------------------------- */
 const updatePromoCode = async (req, res) => {
-    const { code, description, value, type, expiryDate, minimumOrder, maxUses, oneTimeUsePerUser } = req.body;
-    if (!code || !value || !type || !expiryDate) {
+    const { description, promoMode, value, maxDiscount, bundle, expiryDate, minimumOrder, maxUses, oneTimeUsePerUser, active } = req.body;
+    if (!promoMode || !expiryDate) {
         return res.status(400).json({
-            error: "Code, value, type and expiry date are required"
+            error: "promoMode and expiryDate are required"
+        });
+    }
+    // Mode-specific validation
+    if (promoMode === "PERCENT" && (value == null || value <= 0)) {
+        return res.status(400).json({
+            error: "Percentage promo requires a valid value"
+        });
+    }
+    if (promoMode === "FLAT" && (value == null || value <= 0)) {
+        return res.status(400).json({
+            error: "Flat promo requires a valid value"
+        });
+    }
+    if (promoMode === "BUNDLE" &&
+        (!bundle ||
+            bundle.minItems == null ||
+            bundle.bundlePrice == null)) {
+        return res.status(400).json({
+            error: "Bundle promo requires minItems and bundlePrice"
         });
     }
     try {
         const promo = await promo_model_1.PromoCode.findByIdAndUpdate(req.params.id, {
-            code: code.toUpperCase(),
             description,
-            value,
-            type,
+            promoMode,
+            value: promoMode !== "BUNDLE" ? value : undefined,
+            maxDiscount: promoMode === "PERCENT" ? maxDiscount : undefined,
+            bundle: promoMode === "BUNDLE" ? bundle : undefined,
             expiryDate,
             minimumOrder,
             maxUses,
-            oneTimeUsePerUser
+            oneTimeUsePerUser,
+            active
         }, { new: true });
         if (!promo) {
             return res.status(404).json({
