@@ -129,7 +129,7 @@ const applyPromoCode = async (req, res) => {
                     error: "Offer not applicable",
                 });
             }
-            if (promo.bundle?.minItems && itemCount === promo.bundle?.minItems) {
+            if (promo.bundle?.minItems && itemCount !== promo.bundle?.minItems) {
                 return res.status(400).json({
                     error: `Number of cart items should be ${promo.bundle.minItems} to apply this offer`,
                 });
