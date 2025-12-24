@@ -141,13 +141,13 @@ export const applyPromoCode = async (req: Request, res: Response) => {
 
       if (!promo.bundle) {
         return res.status(400).json({
-          error: "Bundle configuration is missing",
+          error: "Offer not applicable",
         });
       }
 
-      if (promo.bundle?.minItems && itemCount < promo.bundle?.minItems) {
+      if (promo.bundle?.minItems && itemCount === promo.bundle?.minItems) {
         return res.status(400).json({
-          error: `Add at least ${promo.bundle.minItems} items to apply this promo`,
+          error: `Number of cart items should be ${promo.bundle.minItems} to apply this offer`,
         });
       }
 
