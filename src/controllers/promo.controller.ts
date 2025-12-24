@@ -193,7 +193,6 @@ export const applyPromoCode = async (req: Request, res: Response) => {
 /* -------------------------------------------------------------------------- */
 /*                            CREATE PROMO CODE                                */
 /* -------------------------------------------------------------------------- */
-
 export const createPromoCode = async (req: Request, res: Response) => {
   const {
     code,
@@ -202,66 +201,94 @@ export const createPromoCode = async (req: Request, res: Response) => {
     value,
     maxDiscount,
     bundle,
+    eligibleProducts,
     expiryDate,
     minimumOrder,
     maxUses,
     oneTimeUsePerUser,
-    active = true
+    active = true,
   } = req.body;
+
+  /* -------------------------------------------------------------------------- */
+  /*                                BASE VALIDATION                             */
+  /* -------------------------------------------------------------------------- */
 
   if (!code || !promoMode || !expiryDate) {
     return res.status(400).json({
-      error: "Code, promoMode and expiryDate are required"
+      error: "Code, promoMode and expiryDate are required",
     });
   }
 
-  // Mode-specific validation
-  if (promoMode === "PERCENT" && (value == null || value <= 0)) {
-    return res.status(400).json({
-      error: "Percentage promo requires a valid value"
-    });
+  /* -------------------------------------------------------------------------- */
+  /*                           MODE-SPECIFIC VALIDATION                          */
+  /* -------------------------------------------------------------------------- */
+
+  if (promoMode === "PERCENT") {
+    if (value == null || value <= 0) {
+      return res.status(400).json({
+        error: "Percentage promo requires a valid value",
+      });
+    }
   }
 
-  if (promoMode === "FLAT" && (value == null || value <= 0)) {
-    return res.status(400).json({
-      error: "Flat promo requires a valid value"
-    });
+  if (promoMode === "FLAT") {
+    if (value == null || value <= 0) {
+      return res.status(400).json({
+        error: "Flat promo requires a valid value",
+      });
+    }
   }
 
-  if (
-    promoMode === "BUNDLE" &&
-    (!bundle ||
-      bundle.minItems == null ||
-      bundle.bundlePrice == null)
-  ) {
-    return res.status(400).json({
-      error: "Bundle promo requires minItems and bundlePrice"
-    });
+  if (promoMode === "BUNDLE") {
+    if (!bundle || bundle.minItems == null || bundle.bundlePrice == null) {
+      return res.status(400).json({
+        error: "Bundle promo requires minItems and bundlePrice",
+      });
+    }
+
+    if (!Array.isArray(eligibleProducts) || eligibleProducts.length === 0) {
+      return res.status(400).json({
+        error: "Bundle promo requires eligibleProducts",
+      });
+    }
   }
+
+  /* -------------------------------------------------------------------------- */
+  /*                               DUPLICATE CHECK                              */
+  /* -------------------------------------------------------------------------- */
 
   try {
     const existingPromo = await PromoCode.findOne({
-      code: code.toUpperCase()
+      code: code.toUpperCase(),
     });
 
     if (existingPromo) {
       return res.status(400).json({
-        error: "Promo code already exists"
+        error: "Promo code already exists",
       });
     }
+
+    /* -------------------------------------------------------------------------- */
+    /*                                CREATE PROMO                                */
+    /* -------------------------------------------------------------------------- */
 
     const promo = new PromoCode({
       code: code.toUpperCase(),
       description,
       promoMode,
+
+      // pricing logic
       value: promoMode !== "BUNDLE" ? value : undefined,
       maxDiscount: promoMode === "PERCENT" ? maxDiscount : undefined,
+
       bundle: promoMode === "BUNDLE" ? bundle : undefined,
+      eligibleProducts: promoMode === "BUNDLE" ? eligibleProducts : [],
+
       expiryDate,
       minimumOrder,
       maxUses,
       oneTimeUsePerUser,
-      active
+      active,
     });
 
     await promo.save();
@@ -270,14 +297,11 @@ export const createPromoCode = async (req: Request, res: Response) => {
   } catch (error) {
     return res.status(500).json({
       message: "Failed to create promo code",
-      error
+      error,
     });
   }
 };
 
-/* -------------------------------------------------------------------------- */
-/*                            UPDATE PROMO CODE                                */
-/* -------------------------------------------------------------------------- */
 
 export const updatePromoCode = async (req: Request, res: Response) => {
   const {
@@ -286,64 +310,103 @@ export const updatePromoCode = async (req: Request, res: Response) => {
     value,
     maxDiscount,
     bundle,
+    eligibleProducts,
     expiryDate,
     minimumOrder,
     maxUses,
     oneTimeUsePerUser,
-    active
+    active,
   } = req.body;
+
+  /* -------------------------------------------------------------------------- */
+  /*                                BASE VALIDATION                             */
+  /* -------------------------------------------------------------------------- */
 
   if (!promoMode || !expiryDate) {
     return res.status(400).json({
-      error: "promoMode and expiryDate are required"
+      error: "promoMode and expiryDate are required",
     });
   }
 
-  // Mode-specific validation
-  if (promoMode === "PERCENT" && (value == null || value <= 0)) {
-    return res.status(400).json({
-      error: "Percentage promo requires a valid value"
-    });
+  /* -------------------------------------------------------------------------- */
+  /*                           MODE-SPECIFIC VALIDATION                          */
+  /* -------------------------------------------------------------------------- */
+
+  if (promoMode === "PERCENT") {
+    if (value == null || value <= 0) {
+      return res.status(400).json({
+        error: "Percentage promo requires a valid value",
+      });
+    }
   }
 
-  if (promoMode === "FLAT" && (value == null || value <= 0)) {
-    return res.status(400).json({
-      error: "Flat promo requires a valid value"
-    });
+  if (promoMode === "FLAT") {
+    if (value == null || value <= 0) {
+      return res.status(400).json({
+        error: "Flat promo requires a valid value",
+      });
+    }
   }
 
-  if (
-    promoMode === "BUNDLE" &&
-    (!bundle ||
-      bundle.minItems == null ||
-      bundle.bundlePrice == null)
-  ) {
-    return res.status(400).json({
-      error: "Bundle promo requires minItems and bundlePrice"
-    });
+  if (promoMode === "BUNDLE") {
+    if (!bundle || bundle.minItems == null || bundle.bundlePrice == null) {
+      return res.status(400).json({
+        error: "Bundle promo requires minItems and bundlePrice",
+      });
+    }
+
+    if (!Array.isArray(eligibleProducts) || eligibleProducts.length === 0) {
+      return res.status(400).json({
+        error: "Bundle promo requires eligibleProducts",
+      });
+    }
   }
+
+  /* -------------------------------------------------------------------------- */
+  /*                                UPDATE PROMO                                */
+  /* -------------------------------------------------------------------------- */
 
   try {
+    const updatePayload: any = {
+      description,
+      promoMode,
+      expiryDate,
+      minimumOrder,
+      maxUses,
+      oneTimeUsePerUser,
+      active,
+    };
+
+    // Reset everything first
+    updatePayload.value = undefined;
+    updatePayload.maxDiscount = undefined;
+    updatePayload.bundle = undefined;
+    updatePayload.eligibleProducts = [];
+
+    // Apply based on mode
+    if (promoMode === "PERCENT") {
+      updatePayload.value = value;
+      updatePayload.maxDiscount = maxDiscount;
+    }
+
+    if (promoMode === "FLAT") {
+      updatePayload.value = value;
+    }
+
+    if (promoMode === "BUNDLE") {
+      updatePayload.bundle = bundle;
+      updatePayload.eligibleProducts = eligibleProducts;
+    }
+
     const promo = await PromoCode.findByIdAndUpdate(
       req.params.id,
-      {
-        description,
-        promoMode,
-        value: promoMode !== "BUNDLE" ? value : undefined,
-        maxDiscount: promoMode === "PERCENT" ? maxDiscount : undefined,
-        bundle: promoMode === "BUNDLE" ? bundle : undefined,
-        expiryDate,
-        minimumOrder,
-        maxUses,
-        oneTimeUsePerUser,
-        active
-      },
+      updatePayload,
       { new: true }
     );
 
     if (!promo) {
       return res.status(404).json({
-        error: "Promo code not found"
+        error: "Promo code not found",
       });
     }
 
@@ -351,7 +414,7 @@ export const updatePromoCode = async (req: Request, res: Response) => {
   } catch (error) {
     return res.status(500).json({
       message: "Failed to update promo code",
-      error
+      error,
     });
   }
 };
